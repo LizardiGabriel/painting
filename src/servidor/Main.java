@@ -8,6 +8,8 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import org.json.JSONObject;
+
 public class Main {
 
     private static final int SERVER_PORT = 12345;
@@ -15,9 +17,6 @@ public class Main {
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = new ServerSocket(SERVER_PORT);
         System.out.println("Servidor iniciado en el puerto " + SERVER_PORT);
-
-        Con con = new Con();
-        con.conectar();
 
 
 
@@ -29,8 +28,25 @@ public class Main {
                 String requestJson = in.readLine();
                 System.out.println("Recibido: " + requestJson);
 
-                String response = "esto es una respuesta";
-                out.println(response);
+                // descomponer el json
+                JSONObject request = new JSONObject(requestJson);
+                String comando = request.getString("comando");
+
+                Comandos comandos = new Comandos(requestJson);
+
+                String respuesta = "";
+
+                if (comando.equals("AUTENTICAR")) {
+                    respuesta = comandos.autenticar();
+
+                } else if (comando.equals("REGISTRAR_PINTOR")) {
+                    respuesta = comandos.registrar("PINTOR");
+                } else if (comando.equals("REGISTRAR_JUEZ")) {
+                    respuesta = comandos.registrar("JUEZ");
+                }
+
+
+                out.println(respuesta);
 
             } catch (IOException e) {
                 System.err.println("Error en la conexión con el cliente: " + e.getMessage());

@@ -1,5 +1,4 @@
-package painters;
-
+package jueces;
 import org.json.JSONObject;
 
 import java.io.*;
@@ -15,8 +14,8 @@ public class SocketHandler {
     public  String manejoSocket(String jsonDatos) {
         String respuesta = "";
         try (Socket socket = new Socket(SERVER_HOST, SERVER_PORT);
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
             out.println(jsonDatos);
             respuesta = in.readLine();
         } catch (UnknownHostException e) {
@@ -44,10 +43,10 @@ public class SocketHandler {
 
     }
 
-    public boolean registerPainter(String username, String password) {
+    public boolean registrarJuez(String username, String password) {
         // implementar la generacion de claves del cliente pintor
 
-        String jsonDatos = "{\"comando\":\"REGISTRAR_PINTOR\",\"user\":\"" + username + "\",\"password\":\"" + password + "\"}";
+        String jsonDatos = "{\"comando\":\"REGISTRAR_JUEZ\",\"user\":\"" + username + "\",\"password\":\"" + password + "\"}";
         String respuesta = manejoSocket(jsonDatos);
 
         JSONObject response = new JSONObject(respuesta);

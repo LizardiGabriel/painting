@@ -10,15 +10,16 @@ public class Con {
 
     String host = "localhost";
     String puerto = "3306";
-    String bd = "pinturas";
+    String bd = "painting";
 
     String url = "jdbc:mysql://"+host+":"+puerto+"/"+bd;
     String user = "root";
     String pass = "";
 
+    Connection conexion = null;
+
 
     public Connection conectar() {
-        Connection conexion = null;
         try {
             conexion = DriverManager.getConnection(url, user, pass);
             if (conexion != null) {
@@ -32,6 +33,16 @@ public class Con {
         }
         return conexion;
     }
+
+    public void cerrar() {
+        try {
+            conexion.close();
+        } catch (SQLException e) {
+            System.out.println("Error al cerrar la conexión: " + e.getMessage());
+        }
+    }
+
+
 
 
 
