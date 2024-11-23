@@ -41,6 +41,7 @@ public class Main {
 
                 } else if (comando.equals("REGISTRAR_PINTOR")) {
                     respuesta = comandos.registrar("PINTOR");
+
                 } else if (comando.equals("REGISTRAR_JUEZ")) {
                     respuesta = comandos.registrar("JUEZ");
                 }

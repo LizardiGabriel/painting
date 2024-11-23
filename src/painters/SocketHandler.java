@@ -31,7 +31,12 @@ public class SocketHandler {
 
     public  boolean authenticatePainter(String username, String password) {
         // hacer un json con los datos.
-        String jsonDatos = "{\"comando\":\"AUTENTICAR\",\"user\":\"" + username + "\",\"password\":\"" + password + "\"}";
+        JSONObject json = new JSONObject();
+        json.put("comando", "AUTENTICAR");
+        json.put("user", username);
+        json.put("password", password);
+        String jsonDatos = json.toString();
+
         String respuesta = manejoSocket(jsonDatos);
 
         JSONObject response = new JSONObject(respuesta);
@@ -47,7 +52,26 @@ public class SocketHandler {
     public boolean registerPainter(String username, String password) {
         // implementar la generacion de claves del cliente pintor
 
-        String jsonDatos = "{\"comando\":\"REGISTRAR_PINTOR\",\"user\":\"" + username + "\",\"password\":\"" + password + "\"}";
+
+        // ...
+
+        // Los Pintores solo generan sus claves ECDSA para firmar el formulario de consenentimiento
+        // El servidor verifica la firma antes de agregar la cuenta del pintor a la base de datos.
+
+        // el pintor genera claves AES para cifrar la pintura
+
+
+
+        // ...
+
+
+
+        JSONObject json = new JSONObject();
+        json.put("comando", "REGISTRAR_PINTOR");
+        json.put("user", username);
+        json.put("password", password);
+        String jsonDatos = json.toString();
+
         String respuesta = manejoSocket(jsonDatos);
 
         JSONObject response = new JSONObject(respuesta);

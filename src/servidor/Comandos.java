@@ -61,8 +61,11 @@ public class Comandos {
             info = "Internal Server Error";
         }
 
-        String responseJson = "{\"response\":\"" + code + "\",\"info\":\"" + info + "\"}";
-        return responseJson;
+        JSONObject response = new JSONObject();
+        response.put("response", code);
+        response.put("info", info);
+        return response.toString();
+
 
     }
 
@@ -115,8 +118,10 @@ public class Comandos {
             info = "Internal Server Error";
         }
 
-        String responseJson = "{\"response\":\"" + ret + "\",\"info\":\"" + info + "\"}";
-        return responseJson;
+        JSONObject response = new JSONObject();
+        response.put("response", ret);
+        response.put("info", info);
+        return response.toString();
 
     }
 

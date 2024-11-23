@@ -30,7 +30,12 @@ public class SocketHandler {
 
     public  boolean authenticatePainter(String username, String password) {
         // hacer un json con los datos.
-        String jsonDatos = "{\"comando\":\"AUTENTICAR\",\"user\":\"" + username + "\",\"password\":\"" + password + "\"}";
+        JSONObject json = new JSONObject();
+        json.put("comando", "AUTENTICAR");
+        json.put("user", username);
+        json.put("password", password);
+        String jsonDatos = json.toString();
+
         String respuesta = manejoSocket(jsonDatos);
 
         JSONObject response = new JSONObject(respuesta);
@@ -44,9 +49,24 @@ public class SocketHandler {
     }
 
     public boolean registrarJuez(String username, String password) {
-        // implementar la generacion de claves del cliente pintor
+        // implementar la generacion de claves del cliente juez
 
-        String jsonDatos = "{\"comando\":\"REGISTRAR_JUEZ\",\"user\":\"" + username + "\",\"password\":\"" + password + "\"}";
+        // ...
+
+        // Los jueces generan claves RSA-OAEP
+
+        // mandar al servidor las publicas
+
+
+        // ...
+
+
+        JSONObject json = new JSONObject();
+        json.put("comando", "REGISTRAR_JUEZ");
+        json.put("user", username);
+        json.put("password", password);
+        String jsonDatos = json.toString();
+
         String respuesta = manejoSocket(jsonDatos);
 
         JSONObject response = new JSONObject(respuesta);
