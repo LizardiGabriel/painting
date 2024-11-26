@@ -15,7 +15,7 @@
         CREATE TABLE Judges (
             id INT AUTO_INCREMENT PRIMARY KEY,
             user_id INT NOT NULL,
-            clave_publica_rsaOAP VARCHAR(255) NOT NULL,
+            clave_publica_rsaOAP VARCHAR(400) NOT NULL,
             FOREIGN KEY (user_id) REFERENCES Users(id)
         );
 
@@ -34,6 +34,8 @@
         
         
         select * from Users;
+        
+        select * from Judges;
 
 
 

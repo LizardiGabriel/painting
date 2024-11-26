@@ -5,7 +5,11 @@ import org.json.JSONObject;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class PainterApp {
@@ -168,7 +172,16 @@ public class PainterApp {
             JOptionPane.showMessageDialog(frame, "Para continuar se te descargaran tus llaves privadas");
 
             String userHome = System.getProperty("user.home");
-            String downloadsFolder = Paths.get(userHome, "Downloads").toString();
+            String downloadsFolder = Paths.get(userHome, "Downloads/pintor").toString();
+            Path path = Paths.get(downloadsFolder);
+            if (!Files.exists(path)) {
+                try {
+                    Files.createDirectories(path);
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+
             String fileName = username + "_ecdsa.txt";
             String fileToSave = Paths.get(downloadsFolder, fileName).toString();
             String firma = "";

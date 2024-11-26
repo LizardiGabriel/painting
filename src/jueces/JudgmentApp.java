@@ -5,6 +5,14 @@ import general.SocketHandler;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.FileWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.NoSuchAlgorithmException;
+
+import general.FunRsa;
+import org.json.JSONObject;
 
 public class JudgmentApp {
 
@@ -132,7 +140,7 @@ public class JudgmentApp {
         return panel;
     }
 
-    private JPanel clavesRsaPanel(String username, String password, String nombre){
+    private JPanel clavesRsaPanel(String username, String password, String nombre) {
 
         JPanel panel = new JPanel(new GridLayout(4, 1, 10, 10));
         JLabel generandoLabel = new JLabel("Generando claves RSA-OAEP...");
@@ -143,17 +151,39 @@ public class JudgmentApp {
 
 
         // generar claves rsa oaep
-        String clavePublica = "ejemplo de una llave publica";
-        String clavePrivada = "ejemplo de una llave privada";
+        String llaves = FunRsa.generateRsaKeys();
+        JSONObject jsonKeys = new JSONObject(llaves);
+        String privateKeyBase64 = jsonKeys.getString("private");
+        String publicKeyBase64 = jsonKeys.getString("public");
+
 
         descargarClavesButton.addActionListener(e -> {
 
-            // descargar claves en un archivo
+            // descargar clave privada en un archivo
+            try {
+                String userHome = System.getProperty("user.home");
+                String downloadsFolder = Paths.get(userHome, "Downloads/juez").toString();
+                Path path = Paths.get(downloadsFolder);
+                if (!Files.exists(path)) {
+                    Files.createDirectories(path);
+                }
+
+                String fileName = username + "_RSA-OAEP.txt";
+                String fileToSave = Paths.get(downloadsFolder, fileName).toString();
+
+                FileWriter fileWriter = new FileWriter(fileToSave);
+                fileWriter.write(privateKeyBase64);
+                fileWriter.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                return;
+            }
+
 
             // ...
 
             // si se descargaron -> registrar en el server
-            if (SocketHandler.registrarJuez(username, password, nombre, clavePublica)){
+            if (SocketHandler.registrarJuez(username, password, nombre, publicKeyBase64)) {
                 JOptionPane.showMessageDialog(panel, "Cuenta registrada exitosamente", "Éxito",
                         JOptionPane.INFORMATION_MESSAGE);
             } else {
