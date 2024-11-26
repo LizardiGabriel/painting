@@ -1,47 +1,73 @@
 package painters;
 
-import javax.crypto.*;
-import javax.crypto.spec.*;
-import java.io.*;
-import java.net.*;
-import java.security.*;
-import java.security.spec.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
+
+import general.FunAes;
+import general.FunRsa;
+import general.SocketHandler;
+import org.json.JSONObject;
 
 public class ImageProcessor {
-    private static final String SERVER_ADDRESS = "localhost";
-    private static final int SERVER_PORT = 12345;
 
-    public void sendEncryptedPainting(File imageFile) throws Exception {
 
-        byte[] imageBytes = readFileAsBytes(imageFile);
-        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-        keyGen.init(256);
-        SecretKey aesKey = keyGen.generateKey();
-        byte[] iv = new byte[12];
-        new SecureRandom().nextBytes(iv);
-        GCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv);
+    public static boolean sendEncryptedPainting(File imageFile) {
+        try{
+            // transformar la imagen a bytes a string
+            FileInputStream fileInputStream = new FileInputStream(imageFile);
+            byte[] bytes = new byte[(int) imageFile.length()];
+            fileInputStream.read(bytes);
+            fileInputStream.close();
+            String imageB64 = Base64.getEncoder().encodeToString(bytes);
 
-        // Cifrar imagen con AES
-        byte[] encryptedImage = encryptWithAES(imageBytes, aesKey, gcmSpec);
+            // generar llave AES
+            String aesKey = FunAes.generateAesKey();
 
-        // Solicitar claves RSA publicas de jueces
+            // cifrar la imagen con la llave AES
+            String encryptedImage = FunAes.encryptAes(imageB64, aesKey);
 
-        // Envolver clave AES
+            // pedir al socket las llaves RSA OAEP publicas de todos los jueces
+            String jsonJuezClave = SocketHandler.getRsaJuecesLlaves();
+            JSONObject jsonObject = new JSONObject(jsonJuezClave);
+            List<String> juezes = new ArrayList<>();
+            List<String> claves = new ArrayList<>();
+            for (String juez : jsonObject.keySet()) {
+                juezes.add(juez);
+                claves.add(jsonObject.getString(juez));
+            }
 
-        // Enviar datos al servidor (IV, Claves AES cifradas (una por juez), Pintura cifrada)
-    }
 
-    private byte[] readFileAsBytes(File file) throws IOException {
-        try (FileInputStream fis = new FileInputStream(file)) {
-            return fis.readAllBytes();
+
+            // cifrar la llave AES con las llaves RSA OAEP de los jueces
+            List<String> encryptedAesKeys = new ArrayList<>();
+            for (String clave : claves) {
+                String encryptedAesKey = FunRsa.encryptRsa(aesKey, clave);
+                encryptedAesKeys.add(encryptedAesKey);
+            }
+
+            // en un json mandar
+            // 1. la imagen cifrada,
+            // 2. las llaves RSA OAEP cifradas con las llaves RSA OAEP de los jueces
+            // 3. el token del pintor
+
+
+
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-    }
 
-    private byte[] encryptWithAES(byte[] data, SecretKey aesKey, GCMParameterSpec gcmSpec) throws Exception {
-        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        cipher.init(Cipher.ENCRYPT_MODE, aesKey, gcmSpec);
-        return cipher.doFinal(data);
-    }
 
+        return true;
+
+
+    }
 }

@@ -1,47 +1,54 @@
 package painters;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 
 
-public class MainWindow extends JFrame {
-    private JTextField filePathField;
-    private JButton browseButton;
-    private JButton sendButton;
-    private File selectedFile;
+public class MainWindow {
 
-    public MainWindow() {
-        setTitle("Imagen - Firmar, Cifrar y Enviar");
-        setSize(400, 150);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout());
+    public String token = "";
+
+
+
+
+    public JPanel mainPanel(String token) {
+        this.token = token;
 
         JPanel panel = new JPanel(new BorderLayout());
-        filePathField = new JTextField();
+        JTextField filePathField = new JTextField();
         filePathField.setEditable(false);
-        browseButton = new JButton("Seleccionar Imagen");
-        sendButton = new JButton("Enviar Imagen");
+        JButton browseButton = new JButton("Seleccionar Imagen");
+        JButton sendButton = new JButton("Enviar Imagen");
         sendButton.setEnabled(false);
+
+        JButton logoutButton = new JButton("Cerrar Sesión");
 
         JPanel buttonsPanel = new JPanel(new FlowLayout());
         buttonsPanel.add(browseButton);
         buttonsPanel.add(sendButton);
+        buttonsPanel.add(logoutButton);
 
         panel.add(filePathField, BorderLayout.CENTER);
         panel.add(buttonsPanel, BorderLayout.SOUTH);
-        add(panel, BorderLayout.CENTER);
+
+        final File[] selectedFile = {null};
+
 
         browseButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 JFileChooser fileChooser = new JFileChooser();
+                FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                        "Image Files", "png","jpg", "jpeg", "img");
+                fileChooser.setFileFilter(filter);
                 int returnValue = fileChooser.showOpenDialog(null);
                 if (returnValue == JFileChooser.APPROVE_OPTION) {
-                    selectedFile = fileChooser.getSelectedFile();
-                    filePathField.setText(selectedFile.getAbsolutePath());
+                    selectedFile[0] = fileChooser.getSelectedFile();
+                    filePathField.setText(selectedFile[0].getAbsolutePath());
                     sendButton.setEnabled(true);
                 }
             }
@@ -50,17 +57,20 @@ public class MainWindow extends JFrame {
         sendButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (selectedFile != null) {
+                if (selectedFile[0] != null) {
                     try {
-                        ImageProcessor processor = new ImageProcessor();
-                        processor.sendEncryptedPainting(selectedFile);
-                        JOptionPane.showMessageDialog(null, "Imagen enviada correctamente.");
+                        if (ImageProcessor.sendEncryptedPainting(selectedFile[0]))
+                            JOptionPane.showMessageDialog(null, "Imagen enviada correctamente.");
+                        else
+                            JOptionPane.showMessageDialog(null, "Error al enviar la imagen.", "Error", JOptionPane.ERROR_MESSAGE);
                     } catch (Exception ex) {
                         JOptionPane.showMessageDialog(null, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 }
             }
         });
+
+        return panel;
     }
 
 }

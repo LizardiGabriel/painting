@@ -2,15 +2,45 @@
     CREATE DATABASE painting;
     USE painting;
 
-    CREATE TABLE Users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user VARCHAR(255) NOT NULL,
-        password VARCHAR(255) NOT NULL
-    );
+        CREATE TABLE Users (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user VARCHAR(255) NOT NULL,
+            password VARCHAR(255) NOT NULL,
+            type ENUM('admin', 'judge', 'painter', 'president') NOT NULL,
+            nombre VARCHAR(255)
+        );
 
-    /* consultar usuarios*/
+-- Resto de las tablas especializadas (jueces, pintores, presidentes)
 
-    select * from Users;
+        CREATE TABLE Judges (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            clave_publica_rsaOAP VARCHAR(255) NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES Users(id)
+        );
+
+        CREATE TABLE Painters (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            clave_publica_ecdsa VARCHAR(255) NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES Users(id)
+        );
+
+        CREATE TABLE Presidents (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES Users(id)
+        );
+        
+        
+        select * from Users;
+
+
+
+
+
+
+
 
 
 

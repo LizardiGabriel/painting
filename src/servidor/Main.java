@@ -18,40 +18,21 @@ public class Main {
         ServerSocket serverSocket = new ServerSocket(SERVER_PORT);
         System.out.println("Servidor iniciado en el puerto " + SERVER_PORT);
 
-
-
         while (true) {
-            try (Socket clientSocket = serverSocket.accept();
-                 PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-                 BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
+            try {
+                Socket clientSocket = serverSocket.accept();
+                System.out.println("Cliente conectado desde " + clientSocket.getInetAddress().getHostAddress());
 
-                String requestJson = in.readLine();
-                System.out.println("Recibido: " + requestJson);
+                // Crear un hilo para manejar la conexion con el cliente
+                ClientHandler clientHandler = new ClientHandler(clientSocket);
+                Thread thread = new Thread(clientHandler);
+                thread.start();
 
-                // descomponer el json
-                JSONObject request = new JSONObject(requestJson);
-                String comando = request.getString("comando");
-
-                Comandos comandos = new Comandos(requestJson);
-
-                String respuesta = "";
-
-                if (comando.equals("AUTENTICAR")) {
-                    respuesta = comandos.autenticar();
-
-                } else if (comando.equals("REGISTRAR_PINTOR")) {
-                    respuesta = comandos.registrar("PINTOR");
-
-                } else if (comando.equals("REGISTRAR_JUEZ")) {
-                    respuesta = comandos.registrar("JUEZ");
-                }
-
-
-                out.println(respuesta);
 
             } catch (IOException e) {
                 System.err.println("Error en la conexión con el cliente: " + e.getMessage());
             }
+
         }
     }
 }
