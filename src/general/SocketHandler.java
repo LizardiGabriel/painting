@@ -211,5 +211,9 @@ public class SocketHandler {
     }
 
 
+    public static boolean sendPainting(String datos) {
 
+
+        return false;
+    }
 }

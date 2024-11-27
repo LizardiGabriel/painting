@@ -39,9 +39,8 @@ public class ImageProcessor {
             for (String juez : jsonObject.keySet()) {
                 juezes.add(juez);
                 claves.add(jsonObject.getString(juez));
+
             }
-
-
 
             // cifrar la llave AES con las llaves RSA OAEP de los jueces
             List<String> encryptedAesKeys = new ArrayList<>();
@@ -50,11 +49,28 @@ public class ImageProcessor {
                 encryptedAesKeys.add(encryptedAesKey);
             }
 
+            // hacer un json con juez: llave cifrada
+            JSONObject jsonAesKeys = new JSONObject();
+            for (int i = 0; i < juezes.size(); i++) {
+                jsonAesKeys.put(juezes.get(i), encryptedAesKeys.get(i));
+            }
+
+
             // en un json mandar
             // 1. la imagen cifrada,
             // 2. las llaves RSA OAEP cifradas con las llaves RSA OAEP de los jueces
             // 3. el token del pintor
+            JSONObject jsonSend = new JSONObject();
+            jsonSend.put("imagen", encryptedImage);
+            // jsonSend.put("iv", iv);
+            jsonSend.put("aesKeys", jsonAesKeys.toString());
+            //jsonSend.put("token", Pintor.getToken());
 
+            // enviar el json
+            if (SocketHandler.sendPainting("enviar datos")){
+                
+                return true;
+            }
 
 
         } catch (FileNotFoundException e) {
@@ -66,7 +82,7 @@ public class ImageProcessor {
         }
 
 
-        return true;
+        return false;
 
 
     }

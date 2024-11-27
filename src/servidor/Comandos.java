@@ -330,6 +330,63 @@ public class Comandos {
     }
 
 
+    /*  ejemplo de json que se debe regresar
+        {
+            "user_Juez1": "clave123",
+            "Juez2": "clave456",
+            "Juez3": "clave789"
+        }
+    */
+    public String getJuecesRsaPublicKeys() {
+
+        String ret = "";
+        String info = "";
 
 
+        JSONObject response = new JSONObject();
+
+        Con con = new Con();
+        Connection conexion = con.conectar();
+
+        if (conexion != null) {
+            try {
+                String query = "SELECT Users.user, Judges.clave_publica_rsaOAP FROM Judges " +
+                        "JOIN Users ON Judges.user_id = Users.id";
+                PreparedStatement preparedStatement = conexion.prepareStatement(query);
+                ResultSet resultSet = preparedStatement.executeQuery();
+
+                while (resultSet.next()) {
+                    String user = resultSet.getString("user");
+                    String clave = resultSet.getString("clave_publica_rsaOAP");
+                    response.put(user, clave);
+
+                }
+
+                ret = "200";
+                info = "OK";
+
+                JSONObject responseFinal = new JSONObject();
+                responseFinal.put("response", ret);
+                responseFinal.put("info", info);
+                responseFinal.put("llaves_publicas", response.toString());
+
+                return responseFinal.toString();
+
+
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            } finally {
+                con.cerrar();
+                System.out.println("Conexion cerrada");
+            }
+        } else {
+            System.out.println("Error en la conexión");
+        }
+
+        JSONObject retError = new JSONObject();
+        retError.put("response", "500");
+        retError.put("info", "Internal Server Error");
+        return retError.toString();
+
+    }
 }

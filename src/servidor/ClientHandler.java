@@ -54,6 +54,10 @@ public class ClientHandler implements Runnable {
                 respuesta = comandos.usuarioExiste();
             }
 
+            if (comando.equals("GET_JUECES_RSA_PUBLIC_KEYS")) {
+                respuesta = comandos.getJuecesRsaPublicKeys();
+            }
+
             out.println(respuesta);
             System.out.println("Enviado: " + respuesta);
 
