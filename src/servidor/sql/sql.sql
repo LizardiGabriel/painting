@@ -36,6 +36,8 @@
         select * from Users;
         
         select * from Judges;
+        
+        select * from Painters;
 
 
 

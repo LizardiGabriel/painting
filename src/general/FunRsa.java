@@ -25,7 +25,7 @@ public class FunRsa {
         System.out.println("Clave pública: " + publicKeyBase64);
 
         // Mensaje a cifrar
-        String mensaje = "me gusta zenobia juliana";
+        String mensaje = "esto es un emeplo para cifrar usando rsa oaep";
 
         // Cifrar el mensaje
         String cifrado = encryptRsa(mensaje, publicKeyBase64);

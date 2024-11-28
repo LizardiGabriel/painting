@@ -26,10 +26,17 @@ public class ImageProcessor {
             String imageB64 = Base64.getEncoder().encodeToString(bytes);
 
             // generar llave AES
-            String aesKey = FunAes.generateAesKey();
+            String key = FunAes.keyGeneration();
+            byte[] iv = FunAes.genIV();
 
-            // cifrar la imagen con la llave AES
-            String encryptedImage = FunAes.encryptAes(imageB64, aesKey);
+            // cifrar la imagen
+            String encryptedImage = FunAes.encrypt(key, imageB64.getBytes(), iv);
+            System.out.println("Mensaje cifrado: " + encryptedImage);
+
+            // descifrar la imagen
+            String descifrado = FunAes.decrypt(key, Base64.getDecoder().decode(encryptedImage), iv);
+            System.out.println("Mensaje descifrado: " + descifrado);
+
 
             // pedir al socket las llaves RSA OAEP publicas de todos los jueces
             String jsonJuezClave = SocketHandler.getRsaJuecesLlaves();
@@ -45,7 +52,7 @@ public class ImageProcessor {
             // cifrar la llave AES con las llaves RSA OAEP de los jueces
             List<String> encryptedAesKeys = new ArrayList<>();
             for (String clave : claves) {
-                String encryptedAesKey = FunRsa.encryptRsa(aesKey, clave);
+                String encryptedAesKey = FunRsa.encryptRsa(key, clave);
                 encryptedAesKeys.add(encryptedAesKey);
             }
 
