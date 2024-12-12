@@ -100,7 +100,7 @@ public class FunRsa {
             return encrypted;
         }
         catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("error: " + e);
         }
         return null;
     }

@@ -27,14 +27,14 @@ public class ImageProcessor {
 
             // generar llave AES
             String key = FunAes.keyGeneration();
-            byte[] iv = FunAes.genIV();
+            String iv = FunAes.genIV();
 
             // cifrar la imagen
-            String encryptedImage = FunAes.encrypt(key, imageB64.getBytes(), iv);
+            String encryptedImage = FunAes.encrypt(key, imageB64, iv);
             System.out.println("Mensaje cifrado: " + encryptedImage);
 
             // descifrar la imagen
-            String descifrado = FunAes.decrypt(key, Base64.getDecoder().decode(encryptedImage), iv);
+            String descifrado = FunAes.decrypt(key, encryptedImage, iv);
             System.out.println("Mensaje descifrado: " + descifrado);
 
 
@@ -44,6 +44,9 @@ public class ImageProcessor {
             List<String> juezes = new ArrayList<>();
             List<String> claves = new ArrayList<>();
             for (String juez : jsonObject.keySet()) {
+                System.out.println("nombre del juez: " + juez);
+                System.out.println("clave publica del juez: " + jsonObject.getString(juez));
+
                 juezes.add(juez);
                 claves.add(jsonObject.getString(juez));
 
@@ -62,14 +65,18 @@ public class ImageProcessor {
                 jsonAesKeys.put(juezes.get(i), encryptedAesKeys.get(i));
             }
 
+            System.out.println("jsonAesKeys: " + jsonAesKeys.toString());
 
+
+            // todo:
             // en un json mandar
-            // 1. la imagen cifrada,
+            // *. la imagen cifrada
+            // * el iv
             // 2. las llaves RSA OAEP cifradas con las llaves RSA OAEP de los jueces
             // 3. el token del pintor
             JSONObject jsonSend = new JSONObject();
             jsonSend.put("imagen", encryptedImage);
-            // jsonSend.put("iv", iv);
+            jsonSend.put("iv", iv);
             jsonSend.put("aesKeys", jsonAesKeys.toString());
             //jsonSend.put("token", Pintor.getToken());
 

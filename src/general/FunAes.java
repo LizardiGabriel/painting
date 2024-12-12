@@ -21,10 +21,10 @@ public class FunAes {
 
         String key = FunAes.keyGeneration();
 
-        byte[] iv = FunAes.genIV();
-        String cifrado = FunAes.encrypt(key, mensaje.getBytes(), iv);
+        String iv = FunAes.genIV();
+        String cifrado = FunAes.encrypt(key, mensaje, iv);
         System.out.println("Mensaje cifrado: " + cifrado);
-        String descifrado = FunAes.decrypt(key, Base64.getDecoder().decode(cifrado), iv);
+        String descifrado = FunAes.decrypt(key, cifrado, iv);
         System.out.println("Mensaje descifrado: " + descifrado);
 
     }
@@ -42,14 +42,17 @@ public class FunAes {
         return "";
     }
 
-    public static String encrypt(String key, byte[] message, byte[] iv){
+    public static String encrypt(String key, String message, String iv){
 
         try{
             SecretKey secretKey = new SecretKeySpec(Base64.getDecoder().decode(key), 0, Base64.getDecoder().decode(key).length, "AES");
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(TAG_SIZE, iv);
+            byte[] iv_b = Base64.getDecoder().decode(iv);
+            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(TAG_SIZE, iv_b);
             cipher.init(Cipher.ENCRYPT_MODE, secretKey, gcmParameterSpec);
-            return Base64.getEncoder().encodeToString(cipher.doFinal(message));
+
+            byte[] mensajeEnBytes = message.getBytes();
+            return Base64.getEncoder().encodeToString(cipher.doFinal(mensajeEnBytes));
 
         }
         catch (Exception e) {
@@ -60,25 +63,29 @@ public class FunAes {
 
     }
 
-    public static String decrypt(String key, byte[] encryptedMessage, byte[] iv){
+    public static String decrypt(String key, String encryptedMessage, String string_iv){
         try {
             SecretKey secretKey = new SecretKeySpec(Base64.getDecoder().decode(key), 0, Base64.getDecoder().decode(key).length, "AES");
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            byte[] iv = Base64.getDecoder().decode(string_iv);
             GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(TAG_SIZE, iv);
             cipher.init(Cipher.DECRYPT_MODE, secretKey, gcmParameterSpec);
-            return new String(cipher.doFinal(encryptedMessage));
+            byte[] encryptedMessage_bytes = Base64.getDecoder().decode(encryptedMessage);
+            return new String(cipher.doFinal(encryptedMessage_bytes));
         } catch (Exception e) {
             e.printStackTrace();
         }
         return "";
     }
 
-    public static byte[] genIV(){
+    public static String genIV(){
         try {
             SecureRandom random = SecureRandom.getInstanceStrong();
             byte[] iv = new byte[IV_SIZE];
             random.nextBytes(iv);
-            return iv;
+            String ret = Base64.getEncoder().encodeToString(iv);
+            return ret;
+
         } catch (Exception e) {
             e.printStackTrace();
         }
