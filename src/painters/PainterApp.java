@@ -1,142 +1,34 @@
 package painters;
+
 import general.FunEcdsa;
 import general.SocketHandler;
 import org.json.JSONObject;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import general.Principal;
+
 public class PainterApp {
 
     private JPanel currentPanel;
-    private JFrame frame;
+    private Principal principal;
     String token = "";
 
-    public void inter() {
-        frame = new JFrame("Inicio de Sesión - Pintores");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(400, 300);
-
-        currentPanel = loginPanel();
-
-        frame.add(currentPanel, BorderLayout.CENTER);
-        frame.setVisible(true);
-
+    public PainterApp(Principal principal) {
+        this.principal = principal;
+        this.currentPanel = principal.getCurrentPanel();
+    }
+    public JPanel getCurrentPanel() {
+        return currentPanel;
     }
 
-    private JPanel loginPanel() {
-        JPanel panel = new JPanel(new GridLayout(4, 1, 10, 10));
-
-        JLabel userLabel = new JLabel("Nombre de usuario:");
-        JTextField userField = new JTextField();
-        JLabel passLabel = new JLabel("Contraseña:");
-        JPasswordField passField = new JPasswordField();
-        JButton loginButton = new JButton("Iniciar Sesión");
-        JButton registerButton = new JButton("Registrar");
-
-        panel.add(userLabel);
-        panel.add(userField);
-        panel.add(passLabel);
-        panel.add(passField);
-        panel.add(loginButton);
-        panel.add(registerButton);
-
-
-        loginButton.addActionListener(e -> {
-            String username = userField.getText();
-            String password = new String(passField.getPassword());
-
-            token = SocketHandler.authenticateUser(username, password, "painter");
-
-            if (token.isEmpty()){
-                JOptionPane.showMessageDialog(panel, "Error al autenticar", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            // Open the painter's main panel
-            currentPanel.setVisible(false);
-            currentPanel = painterPanel(token);
-            frame.add(currentPanel, BorderLayout.CENTER);
-            currentPanel.setVisible(true);
-
-        });
-
-        registerButton.addActionListener(e -> {
-            // Open the painter's registration panel
-            currentPanel.setVisible(false);
-            currentPanel = crearCuentaPanel();
-            frame.add(currentPanel, BorderLayout.CENTER);
-            currentPanel.setVisible(true);
-        });
-
-
-        return panel;
-    }
-
-    private JPanel crearCuentaPanel() {
-        JPanel panel = new JPanel(new GridLayout(4, 1, 10, 10));
-
-        JLabel userLabel = new JLabel("Nombre de usuario:");
-        JTextField userField = new JTextField();
-        JLabel passLabel = new JLabel("Contraseña:");
-        JPasswordField passField = new JPasswordField();
-        JButton registerButton = new JButton("Registrar");
-        JButton backButton = new JButton("Volver");
-
-        panel.add(userLabel);
-        panel.add(userField);
-        panel.add(passLabel);
-        panel.add(passField);
-        panel.add(registerButton);
-        panel.add(backButton);
-
-        registerButton.addActionListener(e -> {
-            String username = userField.getText();
-            String password = new String(passField.getPassword());
-
-            if (username.isEmpty() || password.isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Por favor llena todos los campos",
-                        "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            // 1o verificar si existe una cuenta con ese nombre de usuario
-            if (SocketHandler.usuarioExiste(username)) {
-                JOptionPane.showMessageDialog(frame, "El usuario ya existe",
-                        "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-
-            // pasar los datos a otro panel para firmar el consentimiento
-
-
-            currentPanel.setVisible(false);
-            currentPanel = consentimientoPanel(username, password, "juanito");
-            frame.add(currentPanel, BorderLayout.CENTER);
-            currentPanel.setVisible(true);
-
-
-        });
-
-        backButton.addActionListener(e -> {
-            // Open the painter's main panel
-            currentPanel.setVisible(false);
-            currentPanel = loginPanel();
-            frame.add(currentPanel, BorderLayout.CENTER);
-            currentPanel.setVisible(true);
-        });
-
-        return panel;
-    }
-
-
-    private JPanel consentimientoPanel(String username, String password, String nombre) {
+    public JPanel getConsentimientoPanel(String username, String password, String nombre) {
         JPanel panel = new JPanel(new GridLayout(4, 1, 10, 10));
 
         JLabel consentimientoLabel = new JLabel("Firma el formulario de consentimiento");
@@ -149,18 +41,15 @@ public class PainterApp {
         termsTextArea.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(termsTextArea);
 
-
         JButton firmarButton = new JButton("Firmar");
         JButton backButton = new JButton("Volver");
         JButton downloadTyCButton = new JButton("Descargar Términos y Condiciones");
-
 
         panel.add(consentimientoLabel);
         panel.add(scrollPane);
         panel.add(firmarButton);
         panel.add(backButton);
         panel.add(downloadTyCButton);
-
 
         firmarButton.addActionListener(e -> {
 
@@ -169,7 +58,7 @@ public class PainterApp {
             String pub = json.getString("public");
 
             // descargarle al usuario la llave privada
-            JOptionPane.showMessageDialog(frame, "Para continuar se te descargaran tus llaves privadas");
+            JOptionPane.showMessageDialog(principal.getFrame(), "Para continuar se te descargaran tus llaves privadas");
 
             String userHome = System.getProperty("user.home");
             String downloadsFolder = Paths.get(userHome, "Downloads/pintor").toString();
@@ -193,53 +82,34 @@ public class PainterApp {
                 FileWriter fileWriter = new FileWriter(fileToSave);
                 fileWriter.write(priv);
                 fileWriter.close();
-                JOptionPane.showMessageDialog(frame, "Llave privada guardada en: " + fileToSave);
+                JOptionPane.showMessageDialog(principal.getFrame(), "Llave privada guardada en: " + fileToSave);
 
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(frame, "Error al firmar y guardar la llave privada");
+                JOptionPane.showMessageDialog(principal.getFrame(), "Error al firmar y guardar la llave privada");
                 // mandar al login
-                currentPanel.setVisible(false);
-                currentPanel = loginPanel();
-                frame.add(currentPanel, BorderLayout.CENTER);
-                currentPanel.setVisible(true);
-
+                principal.showLoginFromAnyPanel();
+                return; // Importante agregar return para no continuar con la ejecución
             }
-
 
             if (SocketHandler.registerPainter(username, password, firma, pub, nombre)) {
-                currentPanel.setVisible(false);
-                currentPanel = loginPanel();
-                frame.add(currentPanel, BorderLayout.CENTER);
-                currentPanel.setVisible(true);
-
-            }else {
+                JOptionPane.showMessageDialog(principal.getFrame(), "Registro exitoso", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                principal.showLoginFromAnyPanel();
+            } else {
                 // something went wrong
-                currentPanel.setVisible(false);
-                currentPanel = crearCuentaPanel();
-                frame.add(currentPanel, BorderLayout.CENTER);
-                currentPanel.setVisible(true);
+                JOptionPane.showMessageDialog(principal.getFrame(), "Error en el registro", "Error", JOptionPane.ERROR_MESSAGE);
+                principal.showLoginFromAnyPanel();
             }
-
         });
 
         backButton.addActionListener(e -> {
-            // Open the painter's registration panel
-            currentPanel.setVisible(false);
-            currentPanel = crearCuentaPanel();
-            frame.add(currentPanel, BorderLayout.CENTER);
-            currentPanel.setVisible(true);
+            principal.showLoginFromAnyPanel();
         });
 
         return panel;
     }
 
-
-
-    private JPanel painterPanel(String token) {
-
+    public JPanel painterPanel(String token) {
         MainWindow mainWindow = new MainWindow();
         return mainWindow.mainPanel(token);
-
     }
-
 }

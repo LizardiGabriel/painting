@@ -20,18 +20,11 @@ public class Comandos {
 
 
 
-    /**
-    * Modificar para que el token te regrese: el tipo de usuario, el user y el nombre
-     * @return JSON con la respuesta
-     *
-    * */
     public String autenticar() {
-
         String code = "";
         String info = "";
         String tipo = "";
-        String nombre = "";
-
+        String userId = "";
 
         String user = request.getString("user");
         String password = request.getString("password");
@@ -41,53 +34,58 @@ public class Comandos {
 
         if (conexion != null) {
             try {
-                String query = "SELECT * FROM Users WHERE user = ? AND password = ?";
+                String query = "SELECT id, type, nombre FROM Users WHERE user = ? AND password = ?";
                 PreparedStatement preparedStatement = conexion.prepareStatement(query);
                 preparedStatement.setString(1, user);
                 preparedStatement.setString(2, password);
                 ResultSet resultSet = preparedStatement.executeQuery();
 
                 if (resultSet.next()) {
-                    System.out.println("usuario autenticado");
+                    System.out.println("Usuario autenticado");
                     code = "200";
                     info = "OK";
-                    nombre = resultSet.getString("nombre");
+                    userId = resultSet.getString("id");
                     tipo = resultSet.getString("type");
-
                 } else {
-                    System.out.println("usuario no autenticado");
+                    System.out.println("Usuario no autenticado");
                     code = "401";
                     info = "Unauthorized";
-
                 }
             } catch (SQLException e) {
-                throw new RuntimeException(e);
+                System.err.println("Error al autenticar: " + e.getMessage());
+                code = "500";
+                info = "Internal Server Error";
             } finally {
                 con.cerrar();
-                System.out.println("conexion cerrado");
+                System.out.println("Conexión cerrada");
             }
         } else {
-            System.out.println("error en la conexion");
-            // internal server error
+            System.out.println("Error en la conexión");
             code = "500";
             info = "Internal Server Error";
         }
 
-        JSONObject token = new JSONObject();
-        token.put("type", tipo);
-        token.put("user", user);
-        token.put("nombre", nombre);
 
         JSONObject response = new JSONObject();
         response.put("response", code);
         response.put("info", info);
-        response.put("type", tipo);
-        response.put("token", token.toString());
+        response.put("token", code.equals("200") ? generateToken(user, tipo) : "");
+        response.put("userType", tipo);
+        response.put("userId", userId);
 
         return response.toString();
 
-
     }
+
+    private String generateToken(String user, String type) {
+
+        // todo: implementar un token real
+        return "token_" + user + "_" + type + "_" + System.currentTimeMillis();
+    }
+
+
+
+
 
     public String usuarioExiste(){
 

@@ -1,10 +1,12 @@
 package general;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 
 public class SocketHandler {
 
@@ -40,34 +42,34 @@ public class SocketHandler {
     }
 
 
-    /**
-     * Autentica un usuario en el servidor
-     * @param username nombre de usuario
-     * @param password contraseña
-     * @param tipo tipo de usuario
-     * @return un string con un token de que tipo de usuario es y mas datos
-     */
-    public static String authenticateUser(String username, String password, String tipo) {
-        // hacer un json con los datos.
-        JSONObject json = new JSONObject();
-        json.put("comando", "AUTENTICAR");
-        json.put("user", username);
-        json.put("password", password);
-        String jsonDatos = json.toString();
 
-        String respuesta = manejoSocket(jsonDatos);
+    public static String[] authenticateUser(String username, String password) {
+        String[] result = new String[2];
+        Arrays.fill(result, "");
 
-        JSONObject response = new JSONObject(respuesta);
-        if (response.getString("response").equals("200")) {
+        try {
+            JSONObject request = new JSONObject();
+            request.put("comando", "AUTENTICAR");
+            request.put("user", username);
+            request.put("password", password);
 
-            if(tipo.equals(response.getString("type"))) {
-                return response.getString("token");
+            // Usar manejoSocket para enviar la solicitud y recibir la respuesta
+            String respuesta = manejoSocket(request.toString());
+
+            if (respuesta != null && !respuesta.isEmpty()) {
+                JSONObject response = new JSONObject(respuesta);
+                if (response.has("token") && response.has("userType") && response.has("userId")) {
+                    result[0] = response.getString("token");
+                    result[1] = response.getString("userType") + "," + response.getString("userId");
+                }
+            } else {
+                System.err.println("Respuesta del servidor vacía o nula.");
             }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
-
-        System.out.println(response.getString("info"));
-        return "";
-
+        return result;
     }
 
 
