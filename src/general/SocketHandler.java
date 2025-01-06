@@ -60,7 +60,7 @@ public class SocketHandler {
                 JSONObject response = new JSONObject(respuesta);
                 if (response.has("token") && response.has("userType") && response.has("userId")) {
                     result[0] = response.getString("token");
-                    result[1] = response.getString("userType") + "," + response.getString("userId");
+                    result[1] = response.getString("userType");
                 }
             } else {
                 System.err.println("Respuesta del servidor vacía o nula.");

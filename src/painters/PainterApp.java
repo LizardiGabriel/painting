@@ -30,11 +30,8 @@ public class PainterApp {
 
     public JPanel getConsentimientoPanel(String username, String password, String nombre) {
         JPanel panel = new JPanel(new GridLayout(4, 1, 10, 10));
-
         JLabel consentimientoLabel = new JLabel("Firma el formulario de consentimiento");
-
         JTextArea termsTextArea = new JTextArea(10, 30);
-
         String terms = SocketHandler.getTYC();
 
         termsTextArea.setText(terms);

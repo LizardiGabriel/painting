@@ -14,7 +14,7 @@ public class Con {
 
     String url = "jdbc:mysql://"+host+":"+puerto+"/"+bd;
     String user = "root";
-    String pass = "n0m3l0";
+    String pass = "";
 
     Connection conexion = null;
 

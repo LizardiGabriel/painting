@@ -31,6 +31,13 @@
             user_id INT NOT NULL,
             FOREIGN KEY (user_id) REFERENCES Users(id)
         );
+
+
+insert into Users (user, password, type, nombre) values ('painter', 'painter', 'painter', 'painter');
+insert into Users (user, password, type, nombre) values ('judge', 'judge', 'judge', 'judge');
+insert into Users (user, password, type, nombre) values ('president', 'president', 'president', 'president');
+        
+        
         
         
         select * from Users;
