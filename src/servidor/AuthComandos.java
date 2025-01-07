@@ -20,7 +20,7 @@ public class AuthComandos {
         String user = request.getString("user");
         String password = request.getString("password");
 
-        Con con = new Con();
+        Conexion con = new Conexion();
         Connection conexion = con.conectar();
 
         if (conexion != null) {

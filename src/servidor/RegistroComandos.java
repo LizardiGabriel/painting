@@ -59,7 +59,7 @@ public class RegistroComandos {
             System.out.println("--- --- --- Firma verificada :) --- --- ---");
         }
 
-        Con con = new Con();
+        Conexion con = new Conexion();
         Connection conexion = con.conectar();
 
         if (conexion != null) {
@@ -149,7 +149,7 @@ public class RegistroComandos {
             return response.toString();
         }
 
-        Con con = new Con();
+        Conexion con = new Conexion();
         Connection conexion = con.conectar();
 
         if (conexion != null) {
@@ -240,7 +240,7 @@ public class RegistroComandos {
             return response.toString();
         }
 
-        Con con = new Con();
+        Conexion con = new Conexion();
         Connection conexion = con.conectar();
 
         if (conexion != null) {

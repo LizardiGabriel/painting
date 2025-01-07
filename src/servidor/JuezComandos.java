@@ -12,7 +12,7 @@ public class JuezComandos {
 
     public static String getJuecesRsaPublicKeys(JSONObject request) {
         JSONObject response = new JSONObject();
-        Con con = new Con();
+        Conexion con = new Conexion();
         Connection conexion = con.conectar();
 
         if (conexion != null) {
@@ -55,7 +55,7 @@ public class JuezComandos {
         String[] tokenParts = token.split("_");
         String judgeId = tokenParts[0];
 
-        Con con = new Con();
+        Conexion con = new Conexion();
         Connection conexion = con.conectar();
         JSONObject response = new JSONObject();
 
@@ -110,7 +110,7 @@ public class JuezComandos {
 
         String paintingId = request.getString("painting_id");
 
-        Con con = new Con();
+        Conexion con = new Conexion();
         Connection conexion = con.conectar();
 
         if (conexion != null) {
@@ -169,7 +169,7 @@ public class JuezComandos {
         }
         String judgeId = tokenParts[0];
 
-        Con con = new Con();
+        Conexion con = new Conexion();
         Connection conexion = con.conectar();
         JSONObject response = new JSONObject();
 

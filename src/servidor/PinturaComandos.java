@@ -62,7 +62,7 @@ public class PinturaComandos {
             return response.toString();
         }
 
-        Con con = new Con();
+        Conexion con = new Conexion();
         Connection conexion = con.conectar();
 
         if (conexion != null) {

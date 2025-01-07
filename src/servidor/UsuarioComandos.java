@@ -15,7 +15,7 @@ public class UsuarioComandos {
 
         String user = request.getString("user");
 
-        Con con = new Con();
+        Conexion con = new Conexion();
         Connection conexion = con.conectar();
 
         if (conexion != null) {

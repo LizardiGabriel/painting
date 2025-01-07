@@ -26,7 +26,7 @@ public class PresidentComandos {
         // se podría necesitar el ID del presidente para filtrar
         //String presidentId = tokenParts[0];
 
-        Con con = new Con();
+        Conexion con = new Conexion();
         Connection conexion = con.conectar();
         JSONObject response = new JSONObject();
 
