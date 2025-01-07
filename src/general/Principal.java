@@ -167,7 +167,7 @@ public class Principal {
         JLabel userTypeLabel = new JLabel("Tipo de usuario:");
         userTypeLabel.setForeground(Estilos.TEXT_COLOR);
         userTypeLabel.setFont(DEFAULT_FONT);
-        JComboBox<String> userTypeComboBox = new JComboBox<>(new String[]{"judge", "painter"});
+        JComboBox<String> userTypeComboBox = new JComboBox<>(new String[]{"judge", "painter", "president"});
         userTypeComboBox.setFont(DEFAULT_FONT);
         userTypeComboBox.setBackground(Color.WHITE);
 
@@ -213,6 +213,14 @@ public class Principal {
             } else if ("judge".equals(userType)) {
                 JudgmentApp judgmentApp = new JudgmentApp(this);
                 showPanel(judgmentApp.clavesRsaPanel(username, password, name));
+            }  else if ("president".equals(userType)) {
+                // Registro de presidente
+                if (SocketHandler.registerPresident(SocketHandler.authToken, username, name, password)) {
+                    JOptionPane.showMessageDialog(crearCuentaPanel, "Cuenta de presidente registrada exitosamente", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                    showLoginFromAnyPanel();
+                } else {
+                    JOptionPane.showMessageDialog(crearCuentaPanel, "Error al registrar la cuenta de presidente", "Error", JOptionPane.ERROR_MESSAGE);
+                }
             } else {
                 JOptionPane.showMessageDialog(crearCuentaPanel, "Tipo de usuario no soportado", "Error", JOptionPane.ERROR_MESSAGE);
             }

@@ -252,6 +252,27 @@ public class SocketHandler {
     }
 
 
+    public static boolean registerPresident(String token, String username, String name, String password) {
+        JSONObject json = new JSONObject();
+        json.put("comando", "REGISTRAR_PRESIDENTE");
+        json.put("token", token);
+        json.put("user", username);
+        json.put("nombre", name);
+        json.put("password", password);
+        String jsonDatos = json.toString();
+
+        String respuesta = manejoSocket(jsonDatos);
+
+        JSONObject response = new JSONObject(respuesta);
+        if (response.getString("response").equals("200")) {
+            return true;
+        }
+
+        System.out.println(response.getString("info"));
+        return false;
+    }
+
+
 
 
 

@@ -68,6 +68,9 @@ public class ClientHandler implements Runnable {
                 case "EVALUATE_PAINTING":
                     respuesta = JuezComandos.evaluatePainting(request);
                     break;
+                case "REGISTRAR_PRESIDENTE":
+                    respuesta = RegistroComandos.registrar_presidente(request);
+                    break;
 
                 default:
                     JSONObject response = new JSONObject();

@@ -209,6 +209,100 @@ public class RegistroComandos {
         return response.toString();
     }
 
+
+
+    public static String registrar_presidente(JSONObject request) {
+        String ret = "";
+        String info = "";
+
+        String token = request.getString("token");
+        String user = request.getString("user");
+        String password = request.getString("password");
+        String nombre = request.getString("nombre");
+
+        // si cualquier campo está vacío, retornar error
+        if (token.isEmpty() || user.isEmpty() || password.isEmpty() || nombre.isEmpty()) {
+            ret = "400";
+            info = "Bad Request";
+            JSONObject response = new JSONObject();
+            response.put("response", ret);
+            response.put("info", info);
+            return response.toString();
+        }
+
+        // Validar el token
+        if (!validarTokenAdmin(token)) {
+            ret = "401";
+            info = "Token inválido o expirado";
+            JSONObject response = new JSONObject();
+            response.put("response", ret);
+            response.put("info", info);
+            return response.toString();
+        }
+
+        Con con = new Con();
+        Connection conexion = con.conectar();
+
+        if (conexion != null) {
+            try {
+                // Insertar en la tabla Users
+                String query = "INSERT INTO Users (user, password, type, nombre) VALUES (?, ?, ?, ?)";
+                PreparedStatement preparedStatement = conexion.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+                preparedStatement.setString(1, user);
+                preparedStatement.setString(2, password); // Usar el password
+                preparedStatement.setString(3, "president");
+                preparedStatement.setString(4, nombre);
+                int rows = preparedStatement.executeUpdate();
+
+                if (rows > 0) {
+                    ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
+                    if (generatedKeys.next()) {
+                        int userId = generatedKeys.getInt(1);
+
+                        // Insertar en la tabla Presidents
+                        query = "INSERT INTO Presidents (user_id, public_key_rsa) VALUES (?, ?)";
+                        preparedStatement = conexion.prepareStatement(query);
+                        preparedStatement.setInt(1, userId);
+                        preparedStatement.setString(2, ""); // Aquí puedes generar y guardar la clave pública RSA del presidente o dejarlo vacío
+                        rows = preparedStatement.executeUpdate();
+
+                        if (rows > 0) {
+                            System.out.println("Presidente registrado");
+                            ret = "200";
+                            info = "OK";
+                        } else {
+                            System.out.println("Error al registrar presidente");
+                            ret = "500";
+                            info = "Internal Server Error";
+                        }
+                    }
+                } else {
+                    System.out.println("Error al registrar usuario");
+                    ret = "500";
+                    info = "Internal Server Error";
+                }
+            } catch (SQLException e) {
+                System.out.println("Error SQL: " + e.getMessage());
+                ret = "500";
+                info = "Internal Server Error";
+            } finally {
+                con.cerrar();
+            }
+        } else {
+            System.out.println("Error en la conexión");
+            ret = "500";
+            info = "Internal Server Error";
+        }
+
+        JSONObject response = new JSONObject();
+        response.put("response", ret);
+        response.put("info", info);
+        return response.toString();
+    }
+
+
+
+
     // todo: implementar la validación del token
     private static boolean validarTokenAdmin(String token) {
         // si el token no está vacío y tiene el formato correcto
