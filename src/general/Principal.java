@@ -2,6 +2,7 @@ package general;
 
 import jueces.JudgmentApp;
 import painters.PainterApp;
+import president.PresidentApp;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -109,6 +110,9 @@ public class Principal {
             } else if ("painter".equals(userType)) {
                 PainterApp painterApp = new PainterApp(this);
                 showPanel(painterApp.painterPanel(token));
+            } else if ("president".equals(userType)) {
+                PresidentApp presidentApp = new PresidentApp(this);
+                showPanel(presidentApp.presidentPanel(token));
             } else {
                 JOptionPane.showMessageDialog(loginPanel, "Tipo de usuario desconocido", "Error", JOptionPane.ERROR_MESSAGE);
             }
