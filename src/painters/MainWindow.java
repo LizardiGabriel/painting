@@ -90,7 +90,6 @@ public class MainWindow {
             }
         });
 
-        // Acción del botón de cerrar sesión
         logoutButton.addActionListener(e -> {
             // Eliminar la información de autenticación
             SocketHandler.authToken = "";
@@ -100,7 +99,7 @@ public class MainWindow {
         return panel;
     }
 
-    // Método para mostrar la imagen seleccionada
+
     private void displayImage(File file) {
         ImageIcon imageIcon = new ImageIcon(file.getPath());
         Image image = imageIcon.getImage();
