@@ -307,13 +307,81 @@ public class JudgmentApp {
         evaluateButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // TODO: Implementar la lógica de evaluación
-                JOptionPane.showMessageDialog(principal.getFrame(), "Evaluar pintura: " + paintingId);
+                // Mostrar diálogo de evaluación
+                JPanel evaluationPanel = new JPanel(new GridBagLayout()); // Usar GridBagLayout
+                evaluationPanel.setBackground(Estilos.SECONDARY_COLOR);
+                evaluationPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+                GridBagConstraints gbc = new GridBagConstraints();
+                gbc.gridwidth = GridBagConstraints.REMAINDER;
+                gbc.anchor = GridBagConstraints.WEST;
+                gbc.insets = new Insets(5, 5, 5, 5);
+
+                JLabel starsLabel = new JLabel("Estrellas (1-3):");
+                starsLabel.setFont(Estilos.DEFAULT_FONT);
+                starsLabel.setForeground(Estilos.TEXT_COLOR);
+                evaluationPanel.add(starsLabel, gbc);
+
+                SpinnerNumberModel model = new SpinnerNumberModel(1, 1, 3, 1);
+                JSpinner spinner = new JSpinner(model);
+                spinner.setFont(Estilos.DEFAULT_FONT);
+                // Establecer un tamaño preferido para el JSpinner
+                Dimension spinnerSize = new Dimension(50, spinner.getPreferredSize().height);
+                spinner.setPreferredSize(spinnerSize);
+                evaluationPanel.add(spinner, gbc);
+
+                JLabel commentsLabel = new JLabel("Comentarios:");
+                commentsLabel.setFont(Estilos.DEFAULT_FONT);
+                commentsLabel.setForeground(Estilos.TEXT_COLOR);
+                evaluationPanel.add(commentsLabel, gbc);
+
+                JTextArea commentsArea = new JTextArea(5, 20);
+                commentsArea.setLineWrap(true);
+                commentsArea.setWrapStyleWord(true);
+                commentsArea.setFont(Estilos.DEFAULT_FONT);
+                commentsArea.setBorder(Estilos.FIELD_BORDER); // Aplicar el borde definido en Estilos
+                JScrollPane scrollPane = new JScrollPane(commentsArea);
+                evaluationPanel.add(scrollPane, gbc);
+
+                int result = JOptionPane.showConfirmDialog(principal.getFrame(), evaluationPanel, "Evaluar Pintura " + paintingId,
+                        JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+                if (result == JOptionPane.OK_OPTION) {
+                    int stars = (int) spinner.getValue();
+                    String comments = commentsArea.getText();
+
+                    // Firmar la evaluación
+                    String evaluationSignature = "";
+                    try {
+                        String evaluationData = paintingId + ";" + stars + ";" + comments; // Datos a firmar
+                        evaluationSignature = signEvaluation(evaluationData, privateKey);
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(principal.getFrame(), "Error al firmar la evaluación.", "Error", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+
+                    // Enviar la evaluación al servidor
+                    if (SocketHandler.sendEvaluation(token, paintingId, stars, comments, evaluationSignature)) {
+                        JOptionPane.showMessageDialog(principal.getFrame(), "Evaluación enviada correctamente.");
+                    } else {
+                        JOptionPane.showMessageDialog(principal.getFrame(), "Error al enviar la evaluación.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
             }
         });
 
+
+
         return cardPanel;
     }
+
+
+    // todo firmar evaluacion
+    private String signEvaluation(String data, PrivateKey privateKey) throws Exception {
+        return "Firma de evaluación";
+    }
+
+
 
     // para cargar la clave privada desde un archivo
     private boolean loadPrivateKey() {

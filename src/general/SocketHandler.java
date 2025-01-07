@@ -235,5 +235,24 @@ public class SocketHandler {
     }
 
 
+    public static boolean sendEvaluation(String token, int paintingId, int stars, String comments, String evaluationSignature) {
+        JSONObject json = new JSONObject();
+        json.put("comando", "EVALUATE_PAINTING");
+        json.put("token", token);
+        json.put("paintingId", paintingId);
+        json.put("stars", stars);
+        json.put("comments", comments);
+        json.put("evaluationSignature", evaluationSignature);
+        String jsonDatos = json.toString();
+
+        String respuesta = manejoSocket(jsonDatos);
+
+        JSONObject response = new JSONObject(respuesta);
+        return response.getString("response").equals("200");
+    }
+
+
+
+
 
 }

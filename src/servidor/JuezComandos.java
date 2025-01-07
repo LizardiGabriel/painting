@@ -151,4 +151,66 @@ public class JuezComandos {
         }
 
     }
+
+    public static String evaluatePainting(JSONObject request) {
+        String token = request.getString("token");
+        int paintingId = request.getInt("paintingId");
+        int stars = request.getInt("stars");
+        String comments = request.getString("comments");
+        String evaluationSignature = request.getString("evaluationSignature");
+
+        // Validar el token
+        String[] tokenParts = token.split("_");
+        if (tokenParts.length != 3 || !tokenParts[1].equals("judge")) {
+            JSONObject response = new JSONObject();
+            response.put("response", "401");
+            response.put("info", "Token inválido o expirado");
+            return response.toString();
+        }
+        String judgeId = tokenParts[0];
+
+        Con con = new Con();
+        Connection conexion = con.conectar();
+        JSONObject response = new JSONObject();
+
+        if (conexion != null) {
+            try {
+                // Preparar la consulta SQL
+                String query = "INSERT INTO Evaluations (painting_id, judge_id, stars, comments, blinded_evaluation, blind_signature, evaluation_signature) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?)"; // Ajusta los campos según tu tabla
+                PreparedStatement preparedStatement = conexion.prepareStatement(query);
+                preparedStatement.setInt(1, paintingId);
+                preparedStatement.setInt(2, Integer.parseInt(judgeId));
+                preparedStatement.setInt(3, stars);
+                preparedStatement.setString(4, comments);
+                preparedStatement.setString(5, ""); // Valor temporal para blinded_evaluation
+                preparedStatement.setString(6, ""); // Valor temporal para blind_signature
+                preparedStatement.setString(7, evaluationSignature); // Guardar la firma
+
+                int rows = preparedStatement.executeUpdate();
+
+                if (rows > 0) {
+                    response.put("response", "200");
+                    response.put("info", "OK");
+                } else {
+                    response.put("response", "500");
+                    response.put("info", "Error al guardar la evaluación");
+                }
+
+            } catch (SQLException e) {
+                System.out.println("Error SQL: " + e.getMessage());
+                response.put("response", "500");
+                response.put("info", "Internal Server Error");
+            } finally {
+                con.cerrar();
+            }
+        } else {
+            response.put("response", "500");
+            response.put("info", "Error en la conexión");
+        }
+
+        return response.toString();
+    }
+
+
 }

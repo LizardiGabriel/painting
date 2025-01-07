@@ -65,6 +65,9 @@ public class ClientHandler implements Runnable {
                 case "getEncryptedAESKeyAndIV":
                     respuesta = JuezComandos.getEncryptedAESKeyAndIV(request);
                     break;
+                case "EVALUATE_PAINTING":
+                    respuesta = JuezComandos.evaluatePainting(request);
+                    break;
 
                 default:
                     JSONObject response = new JSONObject();
