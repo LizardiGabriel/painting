@@ -5,7 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 
-public class Con {
+public class Conexion {
     // esta clase va a ser para conectar con la bd
 
     String host = "localhost";
