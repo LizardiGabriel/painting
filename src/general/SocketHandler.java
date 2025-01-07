@@ -31,7 +31,7 @@ public class SocketHandler {
             out.close();
             in.close();
             socket.close();
-            System.out.println("conexion cerrada");
+            //System.out.println("conexion cerrada");
         } catch (UnknownHostException e) {
             System.err.println("Host desconocido: " + SERVER_HOST);
             System.exit(1);
@@ -270,6 +270,25 @@ public class SocketHandler {
 
         System.out.println(response.getString("info"));
         return false;
+    }
+
+
+
+    public static String getEvaluationsForPresident(String token) {
+        JSONObject json = new JSONObject();
+        json.put("comando", "GET_EVALUATIONS_FOR_PRESIDENT");
+        json.put("token", token);
+        String jsonDatos = json.toString();
+
+        String respuesta = manejoSocket(jsonDatos);
+
+        JSONObject response = new JSONObject(respuesta);
+        if (response.getString("response").equals("200")) {
+            return response.getJSONArray("evaluations").toString();
+        } else {
+            System.out.println("Error al obtener la lista de evaluaciones: " + response.getString("info"));
+            return null;
+        }
     }
 
 

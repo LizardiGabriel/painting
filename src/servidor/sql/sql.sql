@@ -77,5 +77,7 @@ select * from Users;
 select * from Painters;
 select * from Paintings;
 
+select * from Evaluations;
+
 SELECT id, type, nombre FROM Users WHERE user = 'painter1' AND password = 'painter1';
 

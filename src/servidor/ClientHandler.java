@@ -27,6 +27,7 @@ public class ClientHandler implements Runnable {
             // Descomponer el json
             JSONObject request = new JSONObject(requestJson);
             String comando = request.getString("comando");
+            System.out.println("Comando: " + comando);
 
             try {
                 System.out.println("Token: " + request.getString("token"));
@@ -70,6 +71,9 @@ public class ClientHandler implements Runnable {
                     break;
                 case "REGISTRAR_PRESIDENTE":
                     respuesta = RegistroComandos.registrar_presidente(request);
+                    break;
+                case "GET_EVALUATIONS_FOR_PRESIDENT":
+                    respuesta = PresidentComandos.getEvaluationsForPresident(request);
                     break;
 
                 default:
