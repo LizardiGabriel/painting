@@ -81,7 +81,8 @@ public class Principal {
         loginPanel.add(userField, gbc);
         loginPanel.add(passLabel, gbc);
         loginPanel.add(passField, gbc);
-        loginPanel.add(Box.createVerticalStrut(15), gbc); // Espacio vertical
+        // Espacio vertical
+        loginPanel.add(Box.createVerticalStrut(15), gbc);
         loginPanel.add(loginButton, gbc);
         loginPanel.add(crearCuentaButton, gbc);
 
@@ -180,7 +181,8 @@ public class Principal {
         crearCuentaPanel.add(nameField, gbc);
         crearCuentaPanel.add(userTypeLabel, gbc);
         crearCuentaPanel.add(userTypeComboBox, gbc);
-        crearCuentaPanel.add(Box.createVerticalStrut(15), gbc); // Espacio vertical
+        // Espacio vertical
+        crearCuentaPanel.add(Box.createVerticalStrut(15), gbc);
         crearCuentaPanel.add(registerButton, gbc);
         crearCuentaPanel.add(backButton, gbc);
 
@@ -254,23 +256,5 @@ public class Principal {
         return currentPanel;
     }
 
-    // Método para dar estilo a los botones
-    private void styleButton(JButton button) {
-        button.setFont(DEFAULT_FONT);
-        button.setBackground(ACCENT_COLOR);
-        button.setForeground(Color.WHITE);
-        button.setFocusPainted(false);
-        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
-        // Efecto hover
-        button.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                button.setBackground(ACCENT_COLOR.brighter());
-            }
-
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                button.setBackground(ACCENT_COLOR);
-            }
-        });
-    }
 }
