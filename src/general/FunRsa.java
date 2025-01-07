@@ -137,7 +137,43 @@ public class FunRsa {
 
     }
 
+    public static String decryptRsa(String cipherText, PrivateKey privateKey) {
+        try {
+            byte[] cipherData = Base64.getDecoder().decode(cipherText);
 
+            Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding");
+            OAEPParameterSpec oaepParams = new OAEPParameterSpec("SHA-256", "MGF1", MGF1ParameterSpec.SHA256, PSource.PSpecified.DEFAULT);
+            cipher.init(Cipher.DECRYPT_MODE, privateKey, oaepParams);
 
+            byte[] plainText = cipher.doFinal(cipherData);
+            String decrypted = new String(plainText, "UTF-8");
+            return decrypted;
+
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+
+    }
+
+    public static PrivateKey getPrivateKeyFromBase64(String privateKeyBase64) throws Exception {
+        byte[] privateKeyBytes = Base64.getDecoder().decode(privateKeyBase64);
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        return keyFactory.generatePrivate(keySpec);
+    }
+
+    public static PublicKey getPublicKeyFromBase64(String publicKeyBase64) throws Exception {
+        byte[] publicKeyBytes = Base64.getDecoder().decode(publicKeyBase64);
+        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicKeyBytes);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        return keyFactory.generatePublic(keySpec);
+    }
 
 }
+
+
+
+
+

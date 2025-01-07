@@ -13,14 +13,15 @@ public class SocketHandler {
     private static final String SERVER_HOST = "localhost";
     private static final int SERVER_PORT = 12345;
 
-    /**
-     * Maneja la conexión con el servidor
-     * @param jsonDatos datos en formato json
-     * @return respuesta del servidor
-     */
+    // Variables para almacenar la información del usuario autenticado
+    public static String authToken = "";
+    public static String authUserType = "";
+    public static String authUserId = "";
+
     public  static String manejoSocket(String jsonDatos) {
         String respuesta = "";
         try (Socket socket = new Socket(SERVER_HOST, SERVER_PORT);
+
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
             out.println(jsonDatos);
@@ -42,9 +43,8 @@ public class SocketHandler {
     }
 
 
-
     public static String[] authenticateUser(String username, String password) {
-        String[] result = new String[2];
+        String[] result = new String[3];
         Arrays.fill(result, "");
 
         try {
@@ -53,14 +53,17 @@ public class SocketHandler {
             request.put("user", username);
             request.put("password", password);
 
-            // Usar manejoSocket para enviar la solicitud y recibir la respuesta
             String respuesta = manejoSocket(request.toString());
 
             if (respuesta != null && !respuesta.isEmpty()) {
                 JSONObject response = new JSONObject(respuesta);
-                if (response.has("token") && response.has("userType") && response.has("userId")) {
-                    result[0] = response.getString("token");
+                if (response.getString("response").equals("200")) {
+                    // Guardar el token, userType y userId
+                    authToken = response.getString("token");
+                    // retornamos
+                    result[0] = authToken;
                     result[1] = response.getString("userType");
+                    result[2] = response.getString("userId");
                 }
             } else {
                 System.err.println("Respuesta del servidor vacía o nula.");
@@ -74,11 +77,6 @@ public class SocketHandler {
 
 
 
-    /**
-     * verifica si ya existe un usuario con ese nombre en el server
-     * @param user nombre de usuario
-     * @return un booleano
-     */
     public static boolean usuarioExiste(String user) {
         JSONObject json = new JSONObject();
         json.put("comando", "USUARIO_EXISTE");
@@ -90,45 +88,28 @@ public class SocketHandler {
         JSONObject response = new JSONObject(respuesta);
 
         if (response.getString("response").equals("200")) {
-            // existe
             System.out.println(response.getString("info"));
             return true;
         }
 
         if (response.getString("response").equals("401")) {
-            // no existe
             System.out.println(response.getString("info"));
             return false;
         }
 
-
         System.out.println(response.getString("info"));
         return false;
     }
 
-
-
-    /**
-     * Registra un pintor en el servidor
-     * @param username nombre de usuario
-     * @param password contraseña
-     * @param firma firma
-     * @param pub llave publica
-     * @param nombre nombre
-     * @return un booleano
-     */
-    public static boolean registerPainter(String username, String password, String firma, String pub, String nombre) {
-
-
-        FunEcdsa.generateECDSAKeys();
-
+    public static boolean registerPainter(String token, String username, String firma, String pub, String nombre, String password) {
         JSONObject json = new JSONObject();
         json.put("comando", "REGISTRAR_PINTOR");
+        json.put("token", token);
         json.put("user", username);
-        json.put("password", password);
         json.put("firma", firma);
         json.put("pub", pub);
         json.put("nombre", nombre);
+        json.put("password", password);
         String jsonDatos = json.toString();
 
         String respuesta = manejoSocket(jsonDatos);
@@ -140,25 +121,16 @@ public class SocketHandler {
 
         System.out.println(response.getString("info"));
         return false;
-
-
     }
 
-    /**
-     * Registra un juez en el servidor
-     * @param username nombre de usuario
-     * @param password contraseña
-     * @param nombre nombre
-     * @param pubKeyRsaOaep llave publica rsa oaep
-     * @return un booleano
-     */
-    public static boolean registrarJuez(String username, String password, String nombre, String pubKeyRsaOaep){
+    public static boolean registrarJuez(String token, String username, String nombre, String pubKeyRsaOaep, String password) {
         JSONObject json = new JSONObject();
         json.put("comando", "REGISTRAR_JUEZ");
+        json.put("token", token);
         json.put("user", username);
-        json.put("password", password);
         json.put("nombre", nombre);
         json.put("clave_publica_rsaOAP", pubKeyRsaOaep);
+        json.put("password", password);
         String jsonDatos = json.toString();
 
         String respuesta = manejoSocket(jsonDatos);
@@ -172,10 +144,6 @@ public class SocketHandler {
         return false;
     }
 
-    /**
-     * Obtiene los términos y condiciones del servidor
-     * @return los términos y condiciones
-     */
     public static String getTYC() {
         JSONObject json = new JSONObject();
         json.put("comando", "OBTENER_TYC");
@@ -192,10 +160,6 @@ public class SocketHandler {
         return "";
     }
 
-    /**
-     * Obtiene las llaves publicas de todos los jueces
-     * @return las llaves publicas de los jueces
-     */
     public static String getRsaJuecesLlaves() {
         JSONObject json = new JSONObject();
         json.put("comando", "GET_JUECES_RSA_PUBLIC_KEYS");
@@ -212,10 +176,64 @@ public class SocketHandler {
         return "";
     }
 
+    public static boolean sendPainting(String token, String imagen, String iv, String aesKeys) {
+        JSONObject json = new JSONObject();
+        json.put("comando", "SEND_PAINTING");
+        json.put("token", token);
+        json.put("imagen", imagen);
+        json.put("iv", iv);
+        json.put("aesKeys", aesKeys);
+        String jsonDatos = json.toString();
 
-    public static boolean sendPainting(String datos) {
+        String respuesta = manejoSocket(jsonDatos);
 
+        JSONObject response = new JSONObject(respuesta);
+        if (response.getString("response").equals("200")) {
+            return true;
+        }
 
+        System.out.println(response.getString("info"));
         return false;
     }
+
+
+    public static String getPaintingsForJudge(String token) {
+        JSONObject json = new JSONObject();
+        json.put("comando", "GET_PAINTINGS_FOR_JUDGE");
+        json.put("token", token);
+        String jsonDatos = json.toString();
+
+        String respuesta = manejoSocket(jsonDatos);
+
+        // Manejar la respuesta
+        JSONObject response = new JSONObject(respuesta);
+        if (response.getString("response").equals("200")) {
+            return response.getJSONArray("paintings").toString(); // Devuelve el array de pinturas en formato JSON
+        } else {
+            System.out.println("Error al obtener la lista de pinturas: " + response.getString("info"));
+            return null;
+        }
+    }
+
+
+    public static String getEncryptedAESKeyAndIV(String token, String painting_id) {
+        JSONObject json = new JSONObject();
+        json.put("comando", "getEncryptedAESKeyAndIV");
+        json.put("token", token);
+        json.put("painting_id", painting_id);
+        String jsonDatos = json.toString();
+
+        String respuesta = manejoSocket(jsonDatos);
+
+        JSONObject response = new JSONObject(respuesta);
+        if (response.getString("response").equals("200")) {
+            return response.toString();
+        }
+
+        System.out.println(response.getString("info"));
+        return "";
+    }
+
+
+
 }

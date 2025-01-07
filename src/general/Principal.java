@@ -4,16 +4,25 @@ import jueces.JudgmentApp;
 import painters.PainterApp;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
+
+import static general.Estilos.ACCENT_COLOR;
+import static general.Estilos.DEFAULT_FONT;
+import static servidor.AuthComandos.generateToken;
 
 public class Principal {
 
     private JFrame frame;
     private JPanel currentPanel;
 
+
+
     public static void main(String[] args) {
         EventQueue.invokeLater(() -> {
             try {
+                // Establecer el Look and Feel de Nimbus para una apariencia moderna
+                UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
                 Principal window = new Principal();
                 window.frame.setVisible(true);
             } catch (Exception e) {
@@ -28,30 +37,55 @@ public class Principal {
 
     private void initialize() {
         frame = new JFrame();
-        frame.setBounds(100, 100, 450, 300);
+        frame.setTitle("Sistema de Pintura");
+        frame.setBounds(100, 100, 500, 600);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().setLayout(new CardLayout(0, 0));
+        frame.getContentPane().setBackground(Estilos.SECONDARY_COLOR);
 
-        showLogin(); // Mostrar el login general al iniciar
+        showLogin();
     }
 
     private void showLogin() {
-        JPanel loginPanel = new JPanel(new GridLayout(6, 1, 10, 10));
+        JPanel loginPanel = new JPanel(new GridBagLayout());
+        loginPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        loginPanel.setBackground(Estilos.SECONDARY_COLOR);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridwidth = GridBagConstraints.REMAINDER;
+        gbc.anchor = GridBagConstraints.NORTH;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 0, 5, 0);
 
+        // Componentes del formulario de login
         JLabel userLabel = new JLabel("Nombre de usuario:");
+        userLabel.setForeground(Estilos.TEXT_COLOR);
+        userLabel.setFont(DEFAULT_FONT);
         JTextField userField = new JTextField();
+        userField.setFont(DEFAULT_FONT);
+        userField.setBorder(Estilos.FIELD_BORDER);
+
         JLabel passLabel = new JLabel("Contraseña:");
+        passLabel.setForeground(Estilos.TEXT_COLOR);
+        passLabel.setFont(DEFAULT_FONT);
         JPasswordField passField = new JPasswordField();
+        passField.setFont(DEFAULT_FONT);
+        passField.setBorder(Estilos.FIELD_BORDER);
+
         JButton loginButton = new JButton("Iniciar Sesión");
+        Estilos.styleButton(loginButton);
         JButton crearCuentaButton = new JButton("Crear Cuenta");
+        Estilos.styleButton(crearCuentaButton);
 
-        loginPanel.add(userLabel);
-        loginPanel.add(userField);
-        loginPanel.add(passLabel);
-        loginPanel.add(passField);
-        loginPanel.add(loginButton);
-        loginPanel.add(crearCuentaButton);
+        // Agregar componentes al panel usando GridBagConstraints
+        loginPanel.add(userLabel, gbc);
+        loginPanel.add(userField, gbc);
+        loginPanel.add(passLabel, gbc);
+        loginPanel.add(passField, gbc);
+        loginPanel.add(Box.createVerticalStrut(15), gbc); // Espacio vertical
+        loginPanel.add(loginButton, gbc);
+        loginPanel.add(crearCuentaButton, gbc);
 
+        // Acciones de los botones
         loginButton.addActionListener(e -> {
             String username = userField.getText();
             String password = new String(passField.getPassword());
@@ -59,9 +93,10 @@ public class Principal {
             // Autenticar al usuario
             String[] response = SocketHandler.authenticateUser(username, password);
             String token = response[0];
-            String userType = response[1]; // Obtener el tipo de usuario
+            String userType = response[1];
+            String userId = response[2];
 
-            if (token.isEmpty() || userType.isEmpty()) {
+            if (token.isEmpty() || userType.isEmpty() || userId.isEmpty()) {
                 JOptionPane.showMessageDialog(loginPanel, "Error al autenticar", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
@@ -82,42 +117,84 @@ public class Principal {
             showCrearCuenta();
         });
 
-        frame.getContentPane().add(loginPanel, "login");
+        // Panel para centrar el loginPanel
+        JPanel centerPanel = new JPanel(new GridBagLayout());
+        centerPanel.setBackground(Estilos.SECONDARY_COLOR);
+        centerPanel.add(loginPanel);
+
+        frame.getContentPane().add(centerPanel, "login");
         ((CardLayout) frame.getContentPane().getLayout()).show(frame.getContentPane(), "login");
-        currentPanel = loginPanel;
+        currentPanel = centerPanel;
     }
 
     private void showCrearCuenta() {
-        JPanel crearCuentaPanel = new JPanel(new GridLayout(8, 2, 10, 10));
+        JPanel crearCuentaPanel = new JPanel(new GridBagLayout());
+        crearCuentaPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        crearCuentaPanel.setBackground(Estilos.SECONDARY_COLOR);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridwidth = GridBagConstraints.REMAINDER;
+        gbc.anchor = GridBagConstraints.NORTH;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 0, 5, 0);
 
+        // Componentes del formulario de creación de cuenta
         JLabel userLabel = new JLabel("Nombre de usuario:");
+        userLabel.setForeground(Estilos.TEXT_COLOR);
+        userLabel.setFont(DEFAULT_FONT);
         JTextField userField = new JTextField();
+        userField.setFont(DEFAULT_FONT);
+        userField.setBorder(Estilos.FIELD_BORDER);
+
         JLabel passLabel = new JLabel("Contraseña:");
+        passLabel.setForeground(Estilos.TEXT_COLOR);
+        passLabel.setFont(DEFAULT_FONT);
         JPasswordField passField = new JPasswordField();
+        passField.setFont(DEFAULT_FONT);
+        passField.setBorder(Estilos.FIELD_BORDER);
+
         JLabel nameLabel = new JLabel("Nombre:");
+        nameLabel.setForeground(Estilos.TEXT_COLOR);
+        nameLabel.setFont(DEFAULT_FONT);
         JTextField nameField = new JTextField();
+        nameField.setFont(DEFAULT_FONT);
+        nameField.setBorder(Estilos.FIELD_BORDER);
+
         JLabel userTypeLabel = new JLabel("Tipo de usuario:");
+        userTypeLabel.setForeground(Estilos.TEXT_COLOR);
+        userTypeLabel.setFont(DEFAULT_FONT);
         JComboBox<String> userTypeComboBox = new JComboBox<>(new String[]{"judge", "painter"});
+        userTypeComboBox.setFont(DEFAULT_FONT);
+        userTypeComboBox.setBackground(Color.WHITE);
 
         JButton registerButton = new JButton("Registrar");
+        Estilos.styleButton(registerButton);
         JButton backButton = new JButton("Volver");
+        Estilos.styleButton(backButton);
 
-        crearCuentaPanel.add(userLabel);
-        crearCuentaPanel.add(userField);
-        crearCuentaPanel.add(passLabel);
-        crearCuentaPanel.add(passField);
-        crearCuentaPanel.add(nameLabel);
-        crearCuentaPanel.add(nameField);
-        crearCuentaPanel.add(userTypeLabel);
-        crearCuentaPanel.add(userTypeComboBox);
-        crearCuentaPanel.add(registerButton);
-        crearCuentaPanel.add(backButton);
+        // Agregar componentes al panel usando GridBagConstraints
+        crearCuentaPanel.add(userLabel, gbc);
+        crearCuentaPanel.add(userField, gbc);
+        crearCuentaPanel.add(passLabel, gbc);
+        crearCuentaPanel.add(passField, gbc);
+        crearCuentaPanel.add(nameLabel, gbc);
+        crearCuentaPanel.add(nameField, gbc);
+        crearCuentaPanel.add(userTypeLabel, gbc);
+        crearCuentaPanel.add(userTypeComboBox, gbc);
+        crearCuentaPanel.add(Box.createVerticalStrut(15), gbc); // Espacio vertical
+        crearCuentaPanel.add(registerButton, gbc);
+        crearCuentaPanel.add(backButton, gbc);
 
+        // Acciones de los botones
         registerButton.addActionListener(e -> {
             String username = userField.getText();
             String password = new String(passField.getPassword());
             String name = nameField.getText();
             String userType = (String) userTypeComboBox.getSelectedItem();
+
+            // Asignar un token de administrador temporal
+            String adminToken = null; // Usamos "0" como ID temporal para el admin
+            adminToken = generateToken("0", "admin");
+            SocketHandler.authToken = adminToken;
 
             if (username.isEmpty() || password.isEmpty() || name.isEmpty() || userType == null) {
                 JOptionPane.showMessageDialog(crearCuentaPanel, "Por favor, completa todos los campos", "Error", JOptionPane.ERROR_MESSAGE);
@@ -125,16 +202,12 @@ public class Principal {
             }
 
             if ("painter".equals(userType)) {
-                // Para pintores, primero necesitamos el consentimiento
                 PainterApp painterApp = new PainterApp(this);
                 showPanel(painterApp.getConsentimientoPanel(username, password, name));
             } else if ("judge".equals(userType)) {
-                // Para jueces, mostrar el panel de generación de claves RSA
                 JudgmentApp judgmentApp = new JudgmentApp(this);
                 showPanel(judgmentApp.clavesRsaPanel(username, password, name));
-
             } else {
-                // Manejar otros tipos de usuario si es necesario
                 JOptionPane.showMessageDialog(crearCuentaPanel, "Tipo de usuario no soportado", "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
@@ -143,10 +216,13 @@ public class Principal {
             showLogin();
         });
 
-        showPanel(crearCuentaPanel);
+        // Panel para centrar el crearCuentaPanel
+        JPanel centerPanel = new JPanel(new GridBagLayout());
+        centerPanel.setBackground(Estilos.SECONDARY_COLOR);
+        centerPanel.add(crearCuentaPanel);
+
+        showPanel(centerPanel);
     }
-
-
 
     private void showPanel(JPanel panel) {
         frame.getContentPane().add(panel, "panel");
@@ -154,17 +230,14 @@ public class Principal {
         currentPanel = panel;
     }
 
-    //  volver al login desde cualquier panel
     public void showLoginFromAnyPanel() {
         ((CardLayout) frame.getContentPane().getLayout()).show(frame.getContentPane(), "login");
-        // Limpiar el panel actual si es necesario
         if (currentPanel != null) {
             frame.getContentPane().remove(currentPanel);
             currentPanel = null;
         }
     }
 
-    // Getters para que PainterApp pueda acceder al JFrame y al panel actual
     public JFrame getFrame() {
         return frame;
     }
@@ -172,7 +245,6 @@ public class Principal {
     public void setFrame(JFrame frame) {
         this.frame = frame;
     }
-
 
     public void setCurrentPanel(JPanel currentPanel) {
         this.currentPanel = currentPanel;
@@ -182,5 +254,23 @@ public class Principal {
         return currentPanel;
     }
 
+    // Método para dar estilo a los botones
+    private void styleButton(JButton button) {
+        button.setFont(DEFAULT_FONT);
+        button.setBackground(ACCENT_COLOR);
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
+        // Efecto hover
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                button.setBackground(ACCENT_COLOR.brighter());
+            }
+
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                button.setBackground(ACCENT_COLOR);
+            }
+        });
+    }
 }

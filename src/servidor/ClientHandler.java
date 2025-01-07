@@ -14,48 +14,63 @@ public class ClientHandler implements Runnable {
 
     public ClientHandler(Socket clientSocket) {
         this.clientSocket = clientSocket;
-
     }
-
 
     @Override
     public void run() {
-
         try (PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream())) ) {
+             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
             String requestJson = in.readLine();
-            System.out.println("Recibido: " + requestJson);
 
-            // descomponer el json
+            //System.out.println("Recibido: " + requestJson);
+
+            // Descomponer el json
             JSONObject request = new JSONObject(requestJson);
             String comando = request.getString("comando");
 
-            Comandos comandos = new Comandos(requestJson);
+            try {
+                System.out.println("Token: " + request.getString("token"));
+            }
+            catch (Exception e) {
+                System.out.println("Token: null");
+            }
 
             String respuesta = "";
 
-            if (comando.equals("AUTENTICAR")) {
-                respuesta = comandos.autenticar();
-            }
+            switch (comando) {
+                case "AUTENTICAR":
+                    respuesta = AuthComandos.autenticar(request);
+                    break;
+                case "REGISTRAR_PINTOR":
+                    respuesta = RegistroComandos.registrar_pintor(request);
+                    break;
+                case "REGISTRAR_JUEZ":
+                    respuesta = RegistroComandos.registrar_juez(request);
+                    break;
+                case "OBTENER_TYC":
+                    respuesta = GeneralComandos.obtenerTYC(request);
+                    break;
+                case "USUARIO_EXISTE":
+                    respuesta = UsuarioComandos.usuarioExiste(request);
+                    break;
+                case "GET_JUECES_RSA_PUBLIC_KEYS":
+                    respuesta = JuezComandos.getJuecesRsaPublicKeys(request);
+                    break;
+                case "SEND_PAINTING":
+                    respuesta = PinturaComandos.sendPainting(request);
+                    break;
+                case "GET_PAINTINGS_FOR_JUDGE":
+                    respuesta = JuezComandos.getPaintingsForJudge(request);
+                    break;
+                case "getEncryptedAESKeyAndIV":
+                    respuesta = JuezComandos.getEncryptedAESKeyAndIV(request);
+                    break;
 
-            if (comando.equals("REGISTRAR_PINTOR")) {
-                respuesta = comandos.registrar_pintor();
-            }
-
-            if (comando.equals("REGISTRAR_JUEZ")) {
-                respuesta = comandos.registrar_juez();
-            }
-
-            if (comando.equals("OBTENER_TYC")) {
-                respuesta = comandos.obtenerTYC();
-            }
-
-            if (comando.equals("USUARIO_EXISTE")) {
-                respuesta = comandos.usuarioExiste();
-            }
-
-            if (comando.equals("GET_JUECES_RSA_PUBLIC_KEYS")) {
-                respuesta = comandos.getJuecesRsaPublicKeys();
+                default:
+                    JSONObject response = new JSONObject();
+                    response.put("response", "400");
+                    response.put("info", "Bad Request - Comando desconocido");
+                    respuesta = response.toString();
             }
 
             out.println(respuesta);
@@ -67,12 +82,8 @@ public class ClientHandler implements Runnable {
             clientSocket.close();
             System.out.println("conexion cerrada");
 
-
         } catch (IOException e) {
             System.err.println("Error en la conexión con el cliente: " + e.getMessage());
         }
-
-
-
     }
 }

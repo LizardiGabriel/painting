@@ -19,6 +19,8 @@ public class PainterApp {
     private JPanel currentPanel;
     private Principal principal;
     String token = "";
+    String userId = "";
+    String userType = "";
 
     public PainterApp(Principal principal) {
         this.principal = principal;
@@ -88,7 +90,8 @@ public class PainterApp {
                 return; // Importante agregar return para no continuar con la ejecución
             }
 
-            if (SocketHandler.registerPainter(username, password, firma, pub, nombre)) {
+            // usar el token de administrador temporal
+            if (SocketHandler.registerPainter(SocketHandler.authToken, username, firma, pub, nombre, password)) {
                 JOptionPane.showMessageDialog(principal.getFrame(), "Registro exitoso", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                 principal.showLoginFromAnyPanel();
             } else {
@@ -106,7 +109,8 @@ public class PainterApp {
     }
 
     public JPanel painterPanel(String token) {
-        MainWindow mainWindow = new MainWindow();
+        this.token = token;
+        MainWindow mainWindow = new MainWindow(principal);
         return mainWindow.mainPanel(token);
     }
 }

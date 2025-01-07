@@ -20,6 +20,7 @@ public class Main {
 
         while (true) {
             try {
+                System.out.println("... --- ___ --- ... --- ... --- ___ --- ...");
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("Cliente conectado desde " + clientSocket.getInetAddress().getHostAddress());
 

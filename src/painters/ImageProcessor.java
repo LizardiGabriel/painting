@@ -15,8 +15,7 @@ import org.json.JSONObject;
 
 public class ImageProcessor {
 
-
-    public static boolean sendEncryptedPainting(File imageFile) {
+    public static boolean sendEncryptedPainting(File imageFile, String token) {
         try{
             // transformar la imagen a bytes a string
             FileInputStream fileInputStream = new FileInputStream(imageFile);
@@ -31,12 +30,11 @@ public class ImageProcessor {
 
             // cifrar la imagen
             String encryptedImage = FunAes.encrypt(key, imageB64, iv);
-            System.out.println("Mensaje cifrado: " + encryptedImage);
+            //System.out.println("Mensaje cifrado: " + encryptedImage);
 
             // descifrar la imagen
-            String descifrado = FunAes.decrypt(key, encryptedImage, iv);
-            System.out.println("Mensaje descifrado: " + descifrado);
-
+            //String descifrado = FunAes.decrypt(key, encryptedImage, iv);
+            //System.out.println("Mensaje descifrado: " + descifrado);
 
             // pedir al socket las llaves RSA OAEP publicas de todos los jueces
             String jsonJuezClave = SocketHandler.getRsaJuecesLlaves();
@@ -49,7 +47,6 @@ public class ImageProcessor {
 
                 juezes.add(juez);
                 claves.add(jsonObject.getString(juez));
-
             }
 
             // cifrar la llave AES con las llaves RSA OAEP de los jueces
@@ -67,25 +64,10 @@ public class ImageProcessor {
 
             System.out.println("jsonAesKeys: " + jsonAesKeys.toString());
 
-
-            // todo:
-            // en un json mandar
-            // *. la imagen cifrada
-            // * el iv
-            // 2. las llaves RSA OAEP cifradas con las llaves RSA OAEP de los jueces
-            // 3. el token del pintor
-            JSONObject jsonSend = new JSONObject();
-            jsonSend.put("imagen", encryptedImage);
-            jsonSend.put("iv", iv);
-            jsonSend.put("aesKeys", jsonAesKeys.toString());
-            //jsonSend.put("token", Pintor.getToken());
-
             // enviar el json
-            if (SocketHandler.sendPainting("enviar datos")){
-                
+            if (SocketHandler.sendPainting(token, encryptedImage, iv, jsonAesKeys.toString())){
                 return true;
             }
-
 
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
@@ -95,9 +77,6 @@ public class ImageProcessor {
             throw new RuntimeException(e);
         }
 
-
         return false;
-
-
     }
 }
