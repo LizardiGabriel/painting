@@ -57,6 +57,7 @@ CREATE TABLE Evaluations (
     judge_id INT NOT NULL,
     stars INT NOT NULL CHECK (stars BETWEEN 1 AND 3),
     comments TEXT,
+    blinded_message TEXT, -- Nuevo
     blinded_evaluation TEXT, -- Representación cegada de la evaluación
     blind_signature TEXT, -- Firma ciega del presidente
     evaluation_signature TEXT, -- Firma de la evaluación por el juez
@@ -73,9 +74,11 @@ CREATE TABLE Painting_Results (
 );
 
 
+
 select * from Users;
 select * from Painters;
 select * from Paintings;
+select * from Presidents;
 
 select * from Evaluations;
 

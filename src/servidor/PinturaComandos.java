@@ -126,15 +126,40 @@ public class PinturaComandos {
                             PreparedStatement preparedStatement2 = conexion.prepareStatement(query);
                             preparedStatement2.setString(1, judge_user);
                             ResultSet resultSet2 = preparedStatement2.executeQuery();
-                            String judge_id = "";
+                            String user_judge_id = "";
                             if (resultSet2.next()) {
-                                judge_id = resultSet2.getString("id");
+                                user_judge_id = resultSet2.getString("id");
                             }
+
+                            // el judge id no es lo mismo que el user id
+                            // Obtener el judge_id a partir del user_id
+                            query = "SELECT id FROM Judges WHERE user_id = ?";
+                            preparedStatement = conexion.prepareStatement(query);
+                            preparedStatement.setInt(1, Integer.parseInt(user_judge_id));
+                            resultSet = preparedStatement.executeQuery();
+
+                            int judge_id = 0;
+
+                            if (resultSet.next()) {
+                                judge_id = resultSet.getInt("id");
+                                System.out.println("???????  ---> Judge ID: " + judge_id);
+                            } else {
+                                System.out.println("Error: No se encontró el judge_id para el user_id " + user_judge_id);
+                                ret = "404";
+                                info = "Judge not found";
+                                JSONObject response = new JSONObject();
+                                response.put("response", ret);
+                                response.put("info", info);
+                                return response.toString();
+                            }
+
+
+
 
                             query = "INSERT INTO Encrypted_AES_Keys (painting_id, judge_id, encrypted_aes_key) VALUES (?, ?, ?)";
                             preparedStatement = conexion.prepareStatement(query);
                             preparedStatement.setInt(1, paintingId);
-                            preparedStatement.setString(2, judge_id);
+                            preparedStatement.setInt(2, judge_id);
                             preparedStatement.setString(3, encrypted_aes_key);
                             rows = preparedStatement.executeUpdate();
                             if (rows == 0) {

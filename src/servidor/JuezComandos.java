@@ -157,7 +157,8 @@ public class JuezComandos {
         int paintingId = request.getInt("paintingId");
         int stars = request.getInt("stars");
         String comments = request.getString("comments");
-        String evaluationSignature = request.getString("evaluationSignature");
+        // Obtener el blindedMessage del JSON
+        String blindedMessage = request.getString("blindedMessage");
 
         // Validar el token
         String[] tokenParts = token.split("_");
@@ -176,16 +177,16 @@ public class JuezComandos {
         if (conexion != null) {
             try {
                 // Preparar la consulta SQL
-                String query = "INSERT INTO Evaluations (painting_id, judge_id, stars, comments, blinded_evaluation, blind_signature, evaluation_signature) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?)"; // Ajusta los campos según tu tabla
+                String query = "INSERT INTO Evaluations (painting_id, judge_id, stars, comments, blinded_message) " +
+                        "VALUES (?, ?, ?, ?, ?)"; // Ajusta los campos según tu tabla
                 PreparedStatement preparedStatement = conexion.prepareStatement(query);
                 preparedStatement.setInt(1, paintingId);
                 preparedStatement.setInt(2, Integer.parseInt(judgeId));
                 preparedStatement.setInt(3, stars);
                 preparedStatement.setString(4, comments);
-                preparedStatement.setString(5, ""); // Valor temporal para blinded_evaluation
-                preparedStatement.setString(6, ""); // Valor temporal para blind_signature
-                preparedStatement.setString(7, evaluationSignature); // Guardar la firma
+
+                // Guardar el blindedMessage en la base de datos
+                preparedStatement.setString(5, blindedMessage);
 
                 int rows = preparedStatement.executeUpdate();
 

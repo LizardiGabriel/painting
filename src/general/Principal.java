@@ -215,11 +215,14 @@ public class Principal {
                 showPanel(painterApp.getConsentimientoPanel(username, password, name));
             } else if ("judge".equals(userType)) {
                 JudgmentApp judgmentApp = new JudgmentApp(this);
-                showPanel(judgmentApp.clavesRsaPanel(username, password, name));
-            }  else if ("president".equals(userType)) {
-                // Registro de presidente
-                if (SocketHandler.registerPresident(SocketHandler.authToken, username, name, password)) {
+                showPanel(judgmentApp.clavesRsaPanel(username, name, password));
+            } else if ("president".equals(userType)) {
+                // Registrar presidente
+                PresidentApp presidentApp = new PresidentApp(this);
+                presidentApp.generateAndDownloadKeyPair(username); // Generar y descargar llaves del presidente
+                if (SocketHandler.registerPresident(SocketHandler.authToken, username, name, password, presidentApp.publicKeyBase64_clase)) {
                     JOptionPane.showMessageDialog(crearCuentaPanel, "Cuenta de presidente registrada exitosamente", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+
                     showLoginFromAnyPanel();
                 } else {
                     JOptionPane.showMessageDialog(crearCuentaPanel, "Error al registrar la cuenta de presidente", "Error", JOptionPane.ERROR_MESSAGE);
@@ -228,6 +231,7 @@ public class Principal {
                 JOptionPane.showMessageDialog(crearCuentaPanel, "Tipo de usuario no soportado", "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
+
 
         backButton.addActionListener(e -> {
             showLogin();

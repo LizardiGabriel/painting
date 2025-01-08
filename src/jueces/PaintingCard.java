@@ -11,12 +11,15 @@ import java.awt.event.ActionListener;
 import java.awt.geom.RoundRectangle2D;
 import java.io.File;
 import java.io.FileInputStream;
+import java.math.BigInteger;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.Base64;
 
 public class PaintingCard extends JPanel {
 
     private PrivateKey privateKey;
+    private PublicKey presidentPublicKey;
     private Principal principal;
     private String judgeId;
     private int paintingId;
@@ -26,9 +29,12 @@ public class PaintingCard extends JPanel {
         this.principal = principal;
         this.judgeId = judgeId;
 
+        // Obtener la clave pública del presidente al inicio
+        this.presidentPublicKey = getPresidentPublicKey();
+
         // Configuración del panel principal
-        setOpaque(false);
-        setPreferredSize(new Dimension(300, 350));
+        setOpaque(false); // Importante para que se vea el fondo redondeado
+        setPreferredSize(new Dimension(300, 400)); // Ajusta el tamaño según sea necesario
         setLayout(new BorderLayout());
 
         // Obtener la información de la pintura
@@ -75,20 +81,36 @@ public class PaintingCard extends JPanel {
         painterLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentPanel.add(painterLabel);
 
+        // Puntuación en estrellas
+        JPanel starsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        starsPanel.setOpaque(false);
+        for (int i = 0; i < 3; i++) {
+            JLabel starLabel = new JLabel("★");
+            starLabel.setFont(new Font(Estilos.DEFAULT_FONT.getName(), Font.PLAIN, 24));
+            starLabel.setForeground(Estilos.ACCENT_COLOR);
+            starsPanel.add(starLabel);
+        }
+        contentPanel.add(starsPanel);
+
         // Panel para los botones
-        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 10));
+        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 10));
         buttonsPanel.setOpaque(false);
 
+        // Botón "About Me"
+        JButton aboutMeButton = new JButton("About Me");
+        Estilos.styleButton(aboutMeButton);
+        buttonsPanel.add(aboutMeButton);
 
         // Botón "Evaluar"
         JButton evaluateButton = new JButton("Evaluar");
-        Estilos.styleMainButton(evaluateButton);
+        Estilos.styleButton(evaluateButton);
         buttonsPanel.add(evaluateButton);
 
         contentPanel.add(buttonsPanel);
         add(contentPanel, BorderLayout.CENTER);
 
         // Acción del botón de evaluar
+
         evaluateButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -136,18 +158,24 @@ public class PaintingCard extends JPanel {
                     int stars = (int) spinner.getValue();
                     String comments = commentsArea.getText();
 
-                    // Firmar la evaluación
-                    String evaluationSignature = "";
+                    // Preparar la evaluación para la firma
+                    String evaluationData = paintingId + ";" + stars + ";" + comments;
+                    String blindedMessage = "";
+                    String blindingFactorBase64 = "";
+
                     try {
-                        String evaluationData = paintingId + ";" + stars + ";" + comments;
-                        evaluationSignature = signEvaluation(evaluationData, privateKey);
+                        // Obtener el mensaje a firmar y el factor de cegado
+                        String[] parts = BlindSignatureClient.prepareBlindMessage(evaluationData, presidentPublicKey).split("_");
+                        blindedMessage = parts[0];
+                        blindingFactorBase64 = parts[1];
+
                     } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(principal.getFrame(), "Error al firmar la evaluación.", "Error", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(principal.getFrame(), "Error al preparar la evaluación para la firma a ciegas.", "Error", JOptionPane.ERROR_MESSAGE);
                         return;
                     }
 
                     // Enviar la evaluación al servidor
-                    if (SocketHandler.sendEvaluation(SocketHandler.authToken, paintingId, stars, comments, evaluationSignature)) {
+                    if (SocketHandler.sendEvaluation(SocketHandler.authToken, paintingId, stars, comments, blindedMessage)) {
                         JOptionPane.showMessageDialog(principal.getFrame(), "Evaluación enviada correctamente.");
                     } else {
                         JOptionPane.showMessageDialog(principal.getFrame(), "Error al enviar la evaluación.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -155,12 +183,24 @@ public class PaintingCard extends JPanel {
                 }
             }
         });
+
+
+
     }
 
-    private String signEvaluation(String data, PrivateKey privateKey) throws Exception {
-        // Implementar la firma de la evaluación aquí
-        return "Firma de la evaluacion";
+    private PublicKey getPresidentPublicKey() {
+        String publicKeyBase64 = SocketHandler.getPresidentPublicKey(SocketHandler.authToken);
+        if (publicKeyBase64 != null && !publicKeyBase64.isEmpty()) {
+            try {
+                return FunRsa.getPublicKeyFromBase64(publicKeyBase64);
+            } catch (Exception e) {
+                System.err.println("Error al obtener la clave pública del presidente: " + e.getMessage());
+            }
+        }
+        return null;
     }
+
+
 
     private byte[] decryptImage(String filePath, String aesKeyBase64, String ivBase64) {
         try {
@@ -193,7 +233,7 @@ public class PaintingCard extends JPanel {
         RoundRectangle2D roundedRectangle = new RoundRectangle2D.Float(0, 0, width - 1, height - 1, 30, 30);
 
         // Rellenar el fondo con un color sólido
-        g2d.setColor(Estilos.PRIMARY_COLOR);
+        g2d.setColor(Estilos.SECONDARY_COLOR);
         g2d.fill(roundedRectangle);
 
         // Dibujar el borde redondeado

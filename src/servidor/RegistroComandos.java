@@ -210,7 +210,6 @@ public class RegistroComandos {
     }
 
 
-
     public static String registrar_presidente(JSONObject request) {
         String ret = "";
         String info = "";
@@ -219,9 +218,10 @@ public class RegistroComandos {
         String user = request.getString("user");
         String password = request.getString("password");
         String nombre = request.getString("nombre");
+        String publicKey = request.getString("publicKey"); // Recibir la clave pública del cliente
 
         // si cualquier campo está vacío, retornar error
-        if (token.isEmpty() || user.isEmpty() || password.isEmpty() || nombre.isEmpty()) {
+        if (token.isEmpty() || user.isEmpty() || password.isEmpty() || nombre.isEmpty() || publicKey.isEmpty()) {
             ret = "400";
             info = "Bad Request";
             JSONObject response = new JSONObject();
@@ -249,7 +249,7 @@ public class RegistroComandos {
                 String query = "INSERT INTO Users (user, password, type, nombre) VALUES (?, ?, ?, ?)";
                 PreparedStatement preparedStatement = conexion.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
                 preparedStatement.setString(1, user);
-                preparedStatement.setString(2, password); // Usar el password
+                preparedStatement.setString(2, password);
                 preparedStatement.setString(3, "president");
                 preparedStatement.setString(4, nombre);
                 int rows = preparedStatement.executeUpdate();
@@ -263,7 +263,7 @@ public class RegistroComandos {
                         query = "INSERT INTO Presidents (user_id, public_key_rsa) VALUES (?, ?)";
                         preparedStatement = conexion.prepareStatement(query);
                         preparedStatement.setInt(1, userId);
-                        preparedStatement.setString(2, ""); // Aquí puedes generar y guardar la clave pública RSA del presidente o dejarlo vacío
+                        preparedStatement.setString(2, publicKey); // Guardar la clave pública
                         rows = preparedStatement.executeUpdate();
 
                         if (rows > 0) {
@@ -302,8 +302,6 @@ public class RegistroComandos {
 
 
 
-
-    // todo: implementar la validación del token
     private static boolean validarTokenAdmin(String token) {
         // si el token no está vacío y tiene el formato correcto
         if (token == null || token.isEmpty() || !token.contains("_")) {
@@ -312,5 +310,9 @@ public class RegistroComandos {
         String[] parts = token.split("_");
         return parts.length == 3 && parts[1].equals("admin");
     }
+
+
+
+
 
 }

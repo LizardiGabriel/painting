@@ -235,14 +235,14 @@ public class SocketHandler {
     }
 
 
-    public static boolean sendEvaluation(String token, int paintingId, int stars, String comments, String evaluationSignature) {
+    public static boolean sendEvaluation(String token, int paintingId, int stars, String comments, String blindedMessage) {
         JSONObject json = new JSONObject();
         json.put("comando", "EVALUATE_PAINTING");
         json.put("token", token);
         json.put("paintingId", paintingId);
         json.put("stars", stars);
         json.put("comments", comments);
-        json.put("evaluationSignature", evaluationSignature);
+        json.put("blindedMessage", blindedMessage);
         String jsonDatos = json.toString();
 
         String respuesta = manejoSocket(jsonDatos);
@@ -252,13 +252,17 @@ public class SocketHandler {
     }
 
 
-    public static boolean registerPresident(String token, String username, String name, String password) {
+
+
+    public static boolean registerPresident(String token, String username, String name, String password, String publicKey) {
         JSONObject json = new JSONObject();
         json.put("comando", "REGISTRAR_PRESIDENTE");
         json.put("token", token);
         json.put("user", username);
         json.put("nombre", name);
         json.put("password", password);
+        json.put("publicKey", publicKey);
+
         String jsonDatos = json.toString();
 
         String respuesta = manejoSocket(jsonDatos);
@@ -292,7 +296,97 @@ public class SocketHandler {
     }
 
 
+    public static String getPresidentPublicKey(String token) {
+        JSONObject json = new JSONObject();
+        json.put("comando", "GET_PRESIDENT_PUBLIC_KEY");
+        json.put("token", token);
+        String jsonDatos = json.toString();
 
+        String respuesta = manejoSocket(jsonDatos);
+
+        JSONObject response = new JSONObject(respuesta);
+        if (response.getString("response").equals("200")) {
+            return response.getString("publicKey");
+        } else {
+            System.out.println("Error al obtener la clave pública del presidente: " + response.getString("info"));
+            return null;
+        }
+    }
+
+
+    public static String sendBlindedEvaluation(String token, int paintingId, String blindedEvaluation) {
+        JSONObject json = new JSONObject();
+        json.put("comando", "BLIND_SIGN_EVALUATION");
+        json.put("token", token);
+        json.put("paintingId", paintingId);
+        json.put("blindedEvaluation", blindedEvaluation);
+
+
+        String jsonDatos = json.toString();
+
+        String respuesta = manejoSocket(jsonDatos);
+
+        JSONObject response = new JSONObject(respuesta);
+        if (response.getString("response").equals("200")) {
+            return response.getString("blindSignature");
+        } else {
+            System.out.println("Error al solicitar la firma a ciegas: " + response.getString("info"));
+            return null;
+        }
+    }
+
+
+    public static String getBlindedEvaluationFromDB(String token, int evaluationId) {
+        JSONObject json = new JSONObject();
+        json.put("comando", "GET_BLINDED_EVALUATION");
+        json.put("token", token);
+        json.put("evaluationId", evaluationId);
+        String jsonDatos = json.toString();
+
+        String respuesta = manejoSocket(jsonDatos);
+
+        JSONObject response = new JSONObject(respuesta);
+        if (response.getString("response").equals("200")) {
+            return response.getString("blindedEvaluation");
+        } else {
+            System.out.println("Error al obtener la evaluación cegada: " + response.getString("info"));
+            return null;
+        }
+    }
+
+
+
+
+
+
+    public static boolean sendBlindedSignature(String token, int evaluationId, String blindSignature) {
+        JSONObject json = new JSONObject();
+        json.put("comando", "SAVE_BLIND_SIGNATURE");
+        json.put("token", token);
+        json.put("evaluationId", evaluationId);
+        json.put("blindSignature", blindSignature);
+
+        String jsonDatos = json.toString();
+
+        String respuesta = manejoSocket(jsonDatos);
+
+        JSONObject response = new JSONObject(respuesta);
+        return response.getString("response").equals("200");
+    }
+
+
+    public static boolean sendPublicKey(String token, String publicKey) {
+        JSONObject json = new JSONObject();
+        json.put("comando", "SAVE_PRESIDENT_PUBLIC_KEY");
+        json.put("token", token);
+        json.put("publicKey", publicKey);
+        String jsonDatos = json.toString();
+
+        String respuesta = manejoSocket(jsonDatos);
+
+        JSONObject response = new JSONObject(respuesta);
+        return response.getString("response").equals("200");
+    }
 
 
 }

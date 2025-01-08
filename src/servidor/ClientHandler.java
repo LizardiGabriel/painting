@@ -75,6 +75,21 @@ public class ClientHandler implements Runnable {
                 case "GET_EVALUATIONS_FOR_PRESIDENT":
                     respuesta = PresidentComandos.getEvaluationsForPresident(request);
                     break;
+                case "BLIND_SIGN_EVALUATION":
+                    respuesta = PresidentComandos.blindSignEvaluation(request);
+                    break;
+                case "GET_PRESIDENT_PUBLIC_KEY":
+                    respuesta = PresidentComandos.getPresidentPublicKey(request);
+                    break;
+                case "GET_BLINDED_EVALUATION":
+                    respuesta = PresidentComandos.getBlindedEvaluationFromDB(request);
+                    break;
+                case "SAVE_BLIND_SIGNATURE":
+                    respuesta = PresidentComandos.saveBlindedSignature(request);
+                    break;
+                case "SAVE_PRESIDENT_PUBLIC_KEY":
+                    respuesta = RegistroComandos.registrar_presidente(request);
+                    break;
 
                 default:
                     JSONObject response = new JSONObject();
