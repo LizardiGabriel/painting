@@ -99,15 +99,31 @@ public class JudgePanel extends JPanel {
 
 
 
-        JPanel viewTogglePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        Estilos.applyDarkMode(viewTogglePanel);
+        // Agregar contentPanel al panel principal
+        add(contentPanel, BorderLayout.CENTER);
+
+        // Panel inferior para el botón de cerrar sesión
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        Estilos.applyDarkMode(bottomPanel);
+        JButton logOutButton = new JButton("Cerrar Sesión");
+        Estilos.styleButton(logOutButton);
 
         JToggleButton toggleEvaluatedButton = new JToggleButton("Mostrar Evaluadas");
+        bottomPanel.add(toggleEvaluatedButton);
 
-        viewTogglePanel.add(toggleEvaluatedButton);
 
-        // Añadir viewTogglePanel a un lugar adecuado de tu layout, por ejemplo, al norte del contentPanel:
-        contentPanel.add(viewTogglePanel, BorderLayout.NORTH);
+        bottomPanel.add(logOutButton);
+
+
+
+
+
+
+
+
+
+        add(bottomPanel, BorderLayout.SOUTH);
+
 
 
         toggleEvaluatedButton.addActionListener(new ActionListener() {
@@ -122,20 +138,6 @@ public class JudgePanel extends JPanel {
                 }
             }
         });
-
-
-
-
-        // Agregar contentPanel al panel principal
-        add(contentPanel, BorderLayout.CENTER);
-
-        // Panel inferior para el botón de cerrar sesión
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        Estilos.applyDarkMode(bottomPanel);
-        JButton logOutButton = new JButton("Cerrar Sesión");
-        Estilos.styleButton(logOutButton);
-        bottomPanel.add(logOutButton);
-        add(bottomPanel, BorderLayout.SOUTH);
 
         // Acción del botón de cerrar sesión
         logOutButton.addActionListener(e -> {

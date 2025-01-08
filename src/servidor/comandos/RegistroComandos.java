@@ -1,7 +1,8 @@
-package servidor;
+package servidor.comandos;
 
 import general.FunEcdsa;
 import org.json.JSONObject;
+import servidor.Conexion;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

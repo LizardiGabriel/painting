@@ -1,4 +1,4 @@
-package servidor;
+package servidor.comandos;
 
 import org.json.JSONObject;
 

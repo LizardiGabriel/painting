@@ -8,9 +8,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
-import static general.Estilos.ACCENT_COLOR;
 import static general.Estilos.DEFAULT_FONT;
-import static servidor.AuthComandos.generateToken;
+import static servidor.comandos.AuthComandos.generateToken;
 
 public class Principal {
 

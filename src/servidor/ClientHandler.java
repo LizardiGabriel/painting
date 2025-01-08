@@ -1,6 +1,7 @@
 package servidor;
 
 import org.json.JSONObject;
+import servidor.comandos.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;

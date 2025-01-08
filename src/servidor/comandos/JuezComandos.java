@@ -1,7 +1,8 @@
-package servidor;
+package servidor.comandos;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import servidor.Conexion;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -195,11 +196,23 @@ public class JuezComandos {
             response.put("info", "Token inválido o expirado");
             return response.toString();
         }
-        String judgeId = tokenParts[0];
+        String userid = tokenParts[0];
 
         Conexion con = new Conexion();
         Connection conexion = con.conectar();
         JSONObject response = new JSONObject();
+
+        // Obtener el judgeId a partir del userId
+        String getJudgeIdQuery = "SELECT j.id FROM Judges j INNER JOIN Users u ON j.user_id = u.id WHERE u.id = ?";
+        PreparedStatement getJudgeIdStatement = conexion.prepareStatement(getJudgeIdQuery);
+        getJudgeIdStatement.setInt(1, Integer.parseInt(userid));
+        ResultSet judgeIdResult = getJudgeIdStatement.executeQuery();
+        String judgeId = "";
+        if (judgeIdResult.next()) {
+            judgeId = judgeIdResult.getString("id");
+        }
+
+
 
         if (conexion != null) {
             try {
@@ -263,14 +276,26 @@ public class JuezComandos {
     }
 
 
-    public static String getEvaluatedPaintingsForJudge(JSONObject request) {
+    public static String getEvaluatedPaintingsForJudge(JSONObject request) throws SQLException {
         String token = request.getString("token");
         String[] tokenParts = token.split("_");
-        String judgeId = tokenParts[0];
+        String userId = tokenParts[0];
 
         Conexion con = new Conexion();
         Connection conexion = con.conectar();
         JSONObject response = new JSONObject();
+
+        // Obtener el judgeId a partir del userId
+        String getJudgeIdQuery = "SELECT j.id FROM Judges j INNER JOIN Users u ON j.user_id = u.id WHERE u.id = ?";
+        PreparedStatement getJudgeIdStatement = conexion.prepareStatement(getJudgeIdQuery);
+        getJudgeIdStatement.setInt(1, Integer.parseInt(userId));
+        ResultSet judgeIdResult = getJudgeIdStatement.executeQuery();
+        String judgeId = "";
+        if (judgeIdResult.next()) {
+            judgeId = judgeIdResult.getString("id");
+        }
+
+
 
         if (conexion != null) {
             try {

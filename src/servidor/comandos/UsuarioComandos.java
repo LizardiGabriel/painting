@@ -1,6 +1,7 @@
-package servidor;
+package servidor.comandos;
 
 import org.json.JSONObject;
+import servidor.Conexion;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

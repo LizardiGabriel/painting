@@ -129,10 +129,6 @@ public class PaintingCard extends JPanel {
             JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 10));
             buttonsPanel.setOpaque(false);
 
-            // Botón "About Me"
-            JButton aboutMeButton = new JButton("About Me");
-            Estilos.styleButton(aboutMeButton);
-            buttonsPanel.add(aboutMeButton);
 
             // Botón "Evaluar"
             JButton evaluateButton = new JButton("Evaluar");
