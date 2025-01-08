@@ -57,6 +57,7 @@ CREATE TABLE Evaluations (
     judge_id INT NOT NULL,
     stars INT NOT NULL CHECK (stars BETWEEN 1 AND 3),
     comments TEXT,
+    is_evaluated bool,
     blinded_message TEXT, -- Nuevo
     blinded_evaluation TEXT, -- Representación cegada de la evaluación
     blind_signature TEXT, -- Firma ciega del presidente

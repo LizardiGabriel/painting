@@ -97,6 +97,35 @@ public class JudgePanel extends JPanel {
         Estilos.applyDarkMode(cardsPanel);
         contentPanel.add(cardsPanel, BorderLayout.CENTER); // Panel de cards en el centro
 
+
+
+        JPanel viewTogglePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        Estilos.applyDarkMode(viewTogglePanel);
+
+        JToggleButton toggleEvaluatedButton = new JToggleButton("Mostrar Evaluadas");
+
+        viewTogglePanel.add(toggleEvaluatedButton);
+
+        // Añadir viewTogglePanel a un lugar adecuado de tu layout, por ejemplo, al norte del contentPanel:
+        contentPanel.add(viewTogglePanel, BorderLayout.NORTH);
+
+
+        toggleEvaluatedButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (toggleEvaluatedButton.isSelected()) {
+                    toggleEvaluatedButton.setText("Mostrar No Evaluadas");
+                    loadEvaluatedPaintings();
+                } else {
+                    toggleEvaluatedButton.setText("Mostrar Evaluadas");
+                    loadPaintings();
+                }
+            }
+        });
+
+
+
+
         // Agregar contentPanel al panel principal
         add(contentPanel, BorderLayout.CENTER);
 
@@ -133,6 +162,25 @@ public class JudgePanel extends JPanel {
         loadPaintings();
     }
 
+
+    private void loadEvaluatedPaintings() {
+        String evaluatedPaintingsJson = SocketHandler.getEvaluatedPaintingsForJudge(token);
+        if (evaluatedPaintingsJson != null) {
+            try {
+                this.paintingsArray = new JSONArray(evaluatedPaintingsJson);
+                this.currentCardIndex = 0;
+                updateCardsPanel();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(principal.getFrame(), "Error al cargar la lista de pinturas evaluadas.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } else {
+            JOptionPane.showMessageDialog(principal.getFrame(), "No se pudieron obtener las pinturas evaluadas.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+
+
+
     private void loadPaintings() {
         String paintingsJson = SocketHandler.getPaintingsForJudge(token);
         if (paintingsJson != null) {
@@ -153,8 +201,11 @@ public class JudgePanel extends JPanel {
         if (paintingsArray != null && paintingsArray.length() > 0) {
             try {
                 JSONObject painting = paintingsArray.getJSONObject(currentCardIndex);
-                JPanel cardPanel = new PaintingCard(painting, privateKey, principal, judgeId);
+                boolean isEvaluated = painting.has("stars");
+
+                JPanel cardPanel = new PaintingCard(painting, privateKey, principal, judgeId, isEvaluated);
                 cardsPanel.add(cardPanel);
+
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(principal.getFrame(), "Error al crear la card de la pintura.", "Error", JOptionPane.ERROR_MESSAGE);
             }

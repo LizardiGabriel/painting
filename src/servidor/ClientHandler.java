@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.sql.SQLException;
 
 public class ClientHandler implements Runnable {
 
@@ -91,6 +92,10 @@ public class ClientHandler implements Runnable {
                     respuesta = RegistroComandos.registrar_presidente(request);
                     break;
 
+                case "getEvaluatedPaintingsForJudge":
+                    respuesta = JuezComandos.getEvaluatedPaintingsForJudge(request);
+                    break;
+
                 default:
                     JSONObject response = new JSONObject();
                     response.put("response", "400");
@@ -109,6 +114,8 @@ public class ClientHandler implements Runnable {
 
         } catch (IOException e) {
             System.err.println("Error en la conexión con el cliente: " + e.getMessage());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 }

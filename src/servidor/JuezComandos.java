@@ -67,10 +67,13 @@ public class JuezComandos {
                         "INNER JOIN Encrypted_AES_Keys ek ON p.id = ek.painting_id " +
                         "INNER JOIN Painters pt ON p.painter_id = pt.id " +
                         "INNER JOIN Users u ON pt.user_id = u.id " +
-                        "WHERE ek.judge_id = ?";
+                        "LEFT JOIN Evaluations e ON p.id = e.painting_id AND e.judge_id = ek.judge_id " + // Join con Evaluations
+                        "WHERE ek.judge_id = ? AND (e.id IS NULL OR e.is_evaluated = FALSE)"; // Filtrar por juez y si no hay evaluación o is_evaluated es falso
                 PreparedStatement preparedStatement = conexion.prepareStatement(query);
                 preparedStatement.setInt(1, Integer.parseInt(judgeId));
                 ResultSet resultSet = preparedStatement.executeQuery();
+
+
 
                 JSONArray paintingsArray = new JSONArray();
                 while (resultSet.next()) {
@@ -152,7 +155,7 @@ public class JuezComandos {
 
     }
 
-    public static String evaluatePainting(JSONObject request) {
+    public static String evaluatePainting(JSONObject request) throws SQLException {
         String token = request.getString("token");
         int paintingId = request.getInt("paintingId");
         int stars = request.getInt("stars");
@@ -190,13 +193,91 @@ public class JuezComandos {
 
                 int rows = preparedStatement.executeUpdate();
 
+
+
+
                 if (rows > 0) {
-                    response.put("response", "200");
-                    response.put("info", "OK");
+
+                    String updateQuery = "UPDATE Evaluations SET is_evaluated = TRUE WHERE painting_id = ? AND judge_id = ?";
+                    PreparedStatement updateStatement = conexion.prepareStatement(updateQuery);
+                    updateStatement.setInt(1, paintingId);
+                    updateStatement.setInt(2, Integer.parseInt(judgeId));
+                    updateStatement.executeUpdate();
+                    int rows2 = updateStatement.executeUpdate();
+
+                    if (rows2 > 0) {
+                        response.put("response", "200");
+                        response.put("info", "OK");
+                    } else {
+                        response.put("response", "500");
+                        response.put("info", "Error al guardar la evaluación");
+                    }
+
                 } else {
                     response.put("response", "500");
                     response.put("info", "Error al guardar la evaluación");
                 }
+
+            } catch (SQLException e) {
+                System.out.println("Error SQL: " + e.getMessage());
+                response.put("response", "500");
+                response.put("info", "Internal Server Error");
+            } finally {
+                con.cerrar();
+            }
+
+
+
+
+
+        } else {
+            response.put("response", "500");
+            response.put("info", "Error en la conexión");
+        }
+
+        return response.toString();
+    }
+
+
+    public static String getEvaluatedPaintingsForJudge(JSONObject request) {
+        String token = request.getString("token");
+        String[] tokenParts = token.split("_");
+        String judgeId = tokenParts[0];
+
+        Conexion con = new Conexion();
+        Connection conexion = con.conectar();
+        JSONObject response = new JSONObject();
+
+        if (conexion != null) {
+            try {
+                // Obtener las pinturas que YA han sido evaluadas por el juez
+                String query = "SELECT p.id, p.encrypted_painting_data, u.nombre AS painter_name, e.stars, e.comments, e.blind_signature " +
+                        "FROM Paintings p " +
+                        "INNER JOIN Encrypted_AES_Keys ek ON p.id = ek.painting_id " +
+                        "INNER JOIN Painters pt ON p.painter_id = pt.id " +
+                        "INNER JOIN Users u ON pt.user_id = u.id " +
+                        "INNER JOIN Evaluations e ON p.id = e.painting_id AND e.judge_id = ek.judge_id " +
+                        "WHERE ek.judge_id = ? AND e.is_evaluated = TRUE"; // Filtrar por juez y evaluaciones completadas
+                PreparedStatement preparedStatement = conexion.prepareStatement(query);
+                preparedStatement.setInt(1, Integer.parseInt(judgeId));
+                ResultSet resultSet = preparedStatement.executeQuery();
+
+                JSONArray paintingsArray = new JSONArray();
+                while (resultSet.next()) {
+                    JSONObject painting = new JSONObject();
+                    painting.put("id", resultSet.getInt("id"));
+                    painting.put("file_path", resultSet.getString("encrypted_painting_data"));
+                    painting.put("painter_name", resultSet.getString("painter_name"));
+                    painting.put("stars", resultSet.getInt("stars"));
+                    painting.put("comments", resultSet.getString("comments"));
+                    painting.put("blind_signature", resultSet.getString("blind_signature")); // Importante para la verificación
+                    // ... agregar más información si es necesario ...
+                    paintingsArray.put(painting);
+                }
+
+                response.put("response", "200");
+                response.put("info", "OK");
+                response.put("paintings", paintingsArray);
 
             } catch (SQLException e) {
                 System.out.println("Error SQL: " + e.getMessage());
@@ -212,6 +293,8 @@ public class JuezComandos {
 
         return response.toString();
     }
+
+
 
 
 }

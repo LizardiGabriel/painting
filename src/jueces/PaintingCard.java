@@ -24,7 +24,7 @@ public class PaintingCard extends JPanel {
     private String judgeId;
     private int paintingId;
 
-    public PaintingCard(JSONObject painting, PrivateKey privateKey, Principal principal, String judgeId) throws Exception {
+    public PaintingCard(JSONObject painting, PrivateKey privateKey, Principal principal, String judgeId, boolean isEvaluated) throws Exception {
         this.privateKey = privateKey;
         this.principal = principal;
         this.judgeId = judgeId;
@@ -81,110 +81,146 @@ public class PaintingCard extends JPanel {
         painterLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentPanel.add(painterLabel);
 
-        // Puntuación en estrellas
-        JPanel starsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-        starsPanel.setOpaque(false);
-        for (int i = 0; i < 3; i++) {
-            JLabel starLabel = new JLabel("★");
-            starLabel.setFont(new Font(Estilos.DEFAULT_FONT.getName(), Font.PLAIN, 24));
-            starLabel.setForeground(Estilos.ACCENT_COLOR);
-            starsPanel.add(starLabel);
-        }
-        contentPanel.add(starsPanel);
+        if (isEvaluated) {
+            // Mostrar estrellas, comentarios y firma
+            int stars = painting.getInt("stars");
+            String comments = painting.getString("comments");
+            String blindSignature = painting.getString("blind_signature");
 
-        // Panel para los botones
-        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 10));
-        buttonsPanel.setOpaque(false);
+            // Puntuación en estrellas
+            JPanel starsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+            starsPanel.setOpaque(false);
+            for (int i = 0; i < 3; i++) {
+                JLabel starLabel = new JLabel("★");
+                starLabel.setFont(new Font(Estilos.DEFAULT_FONT.getName(), Font.PLAIN, 24));
+                // Resaltar las estrellas según la puntuación
+                if(i < stars){
+                    starLabel.setForeground(Color.YELLOW);
+                } else {
+                    starLabel.setForeground(Estilos.ACCENT_COLOR);
+                }
 
-        // Botón "About Me"
-        JButton aboutMeButton = new JButton("About Me");
-        Estilos.styleButton(aboutMeButton);
-        buttonsPanel.add(aboutMeButton);
+                starsPanel.add(starLabel);
+            }
+            contentPanel.add(starsPanel);
 
-        // Botón "Evaluar"
-        JButton evaluateButton = new JButton("Evaluar");
-        Estilos.styleButton(evaluateButton);
-        buttonsPanel.add(evaluateButton);
+            // Comentarios
+            JTextArea commentsArea = new JTextArea(comments);
+            commentsArea.setEditable(false);
+            commentsArea.setLineWrap(true);
+            commentsArea.setWrapStyleWord(true);
+            commentsArea.setFont(Estilos.DEFAULT_FONT);
+            commentsArea.setForeground(Estilos.TEXT_COLOR);
+            commentsArea.setBackground(Estilos.SECONDARY_COLOR);
+            commentsArea.setBorder(new EmptyBorder(5, 10, 5, 10));
+            contentPanel.add(commentsArea);
 
-        contentPanel.add(buttonsPanel);
-        add(contentPanel, BorderLayout.CENTER);
+            // Aquí deberías verificar la firma con la clave pública del presidente
+            // y mostrar un mensaje de verificación o un sello.
+            // Ejemplo:
+            // boolean isVerified = BlindSignatureClient.verifySignature(evaluation, blindSignature, presidentPublicKey);
+            // JLabel verificationLabel = new JLabel(isVerified ? "Firma Verificada" : "Firma no válida");
+            // contentPanel.add(verificationLabel);
+            // Reemplaza 'evaluation' con la información necesaria para la verificación
 
-        // Acción del botón de evaluar
+        } else {
+            // Panel para los botones
+            JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 10));
+            buttonsPanel.setOpaque(false);
 
-        evaluateButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Mostrar diálogo de evaluación
-                JPanel evaluationPanel = new JPanel(new GridBagLayout());
-                Estilos.applyDarkMode(evaluationPanel);
-                evaluationPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            // Botón "About Me"
+            JButton aboutMeButton = new JButton("About Me");
+            Estilos.styleButton(aboutMeButton);
+            buttonsPanel.add(aboutMeButton);
 
-                GridBagConstraints gbc = new GridBagConstraints();
-                gbc.gridwidth = GridBagConstraints.REMAINDER;
-                gbc.anchor = GridBagConstraints.WEST;
-                gbc.insets = new Insets(5, 5, 5, 5);
+            // Botón "Evaluar"
+            JButton evaluateButton = new JButton("Evaluar");
+            Estilos.styleButton(evaluateButton);
+            buttonsPanel.add(evaluateButton);
 
-                JLabel starsLabel = new JLabel("Estrellas (1-3):");
-                starsLabel.setFont(Estilos.DEFAULT_FONT);
-                starsLabel.setForeground(Estilos.TEXT_COLOR);
-                evaluationPanel.add(starsLabel, gbc);
+            contentPanel.add(buttonsPanel);
 
-                SpinnerNumberModel model = new SpinnerNumberModel(1, 1, 3, 1);
-                JSpinner spinner = new JSpinner(model);
-                spinner.setFont(Estilos.DEFAULT_FONT);
-                Dimension spinnerSize = new Dimension(50, spinner.getPreferredSize().height);
-                spinner.setPreferredSize(spinnerSize);
-                evaluationPanel.add(spinner, gbc);
+            // Acción del botón de evaluar
 
-                JLabel commentsLabel = new JLabel("Comentarios:");
-                commentsLabel.setFont(Estilos.DEFAULT_FONT);
-                commentsLabel.setForeground(Estilos.TEXT_COLOR);
-                evaluationPanel.add(commentsLabel, gbc);
+            evaluateButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    // Mostrar diálogo de evaluación
+                    JPanel evaluationPanel = new JPanel(new GridBagLayout());
+                    Estilos.applyDarkMode(evaluationPanel);
+                    evaluationPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-                JTextArea commentsArea = new JTextArea(5, 20);
-                Estilos.applyDarkMode(commentsArea);
+                    GridBagConstraints gbc = new GridBagConstraints();
+                    gbc.gridwidth = GridBagConstraints.REMAINDER;
+                    gbc.anchor = GridBagConstraints.WEST;
+                    gbc.insets = new Insets(5, 5, 5, 5);
 
-                commentsArea.setLineWrap(true);
-                commentsArea.setWrapStyleWord(true);
-                commentsArea.setFont(Estilos.DEFAULT_FONT);
-                commentsArea.setBorder(Estilos.FIELD_BORDER);
-                JScrollPane scrollPane = new JScrollPane(commentsArea);
-                evaluationPanel.add(scrollPane, gbc);
+                    JLabel starsLabel = new JLabel("Estrellas (1-3):");
+                    starsLabel.setFont(Estilos.DEFAULT_FONT);
+                    starsLabel.setForeground(Estilos.TEXT_COLOR);
+                    evaluationPanel.add(starsLabel, gbc);
 
-                int result = JOptionPane.showConfirmDialog(principal.getFrame(), evaluationPanel, "Evaluar Pintura " + paintingId,
-                        JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                    SpinnerNumberModel model = new SpinnerNumberModel(1, 1, 3, 1);
+                    JSpinner spinner = new JSpinner(model);
+                    spinner.setFont(Estilos.DEFAULT_FONT);
+                    Dimension spinnerSize = new Dimension(50, spinner.getPreferredSize().height);
+                    spinner.setPreferredSize(spinnerSize);
+                    evaluationPanel.add(spinner, gbc);
 
-                if (result == JOptionPane.OK_OPTION) {
-                    int stars = (int) spinner.getValue();
-                    String comments = commentsArea.getText();
+                    JLabel commentsLabel = new JLabel("Comentarios:");
+                    commentsLabel.setFont(Estilos.DEFAULT_FONT);
+                    commentsLabel.setForeground(Estilos.TEXT_COLOR);
+                    evaluationPanel.add(commentsLabel, gbc);
 
-                    // Preparar la evaluación para la firma
-                    String evaluationData = paintingId + ";" + stars + ";" + comments;
-                    String blindedMessage = "";
-                    String blindingFactorBase64 = "";
+                    JTextArea commentsArea = new JTextArea(5, 20);
+                    Estilos.applyDarkMode(commentsArea);
 
-                    try {
-                        // Obtener el mensaje a firmar y el factor de cegado
-                        String[] parts = BlindSignatureClient.prepareBlindMessage(evaluationData, presidentPublicKey).split("_");
-                        blindedMessage = parts[0];
-                        blindingFactorBase64 = parts[1];
+                    commentsArea.setLineWrap(true);
+                    commentsArea.setWrapStyleWord(true);
+                    commentsArea.setFont(Estilos.DEFAULT_FONT);
+                    commentsArea.setBorder(Estilos.FIELD_BORDER);
+                    JScrollPane scrollPane = new JScrollPane(commentsArea);
+                    evaluationPanel.add(scrollPane, gbc);
 
-                    } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(principal.getFrame(), "Error al preparar la evaluación para la firma a ciegas.", "Error", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
+                    int result = JOptionPane.showConfirmDialog(principal.getFrame(), evaluationPanel, "Evaluar Pintura " + paintingId,
+                            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
-                    // Enviar la evaluación al servidor
-                    if (SocketHandler.sendEvaluation(SocketHandler.authToken, paintingId, stars, comments, blindedMessage)) {
-                        JOptionPane.showMessageDialog(principal.getFrame(), "Evaluación enviada correctamente.");
-                    } else {
-                        JOptionPane.showMessageDialog(principal.getFrame(), "Error al enviar la evaluación.", "Error", JOptionPane.ERROR_MESSAGE);
+                    if (result == JOptionPane.OK_OPTION) {
+                        int stars = (int) spinner.getValue();
+                        String comments = commentsArea.getText();
+
+                        // Preparar la evaluación para la firma
+                        String evaluationData = paintingId + ";" + stars + ";" + comments;
+                        String blindedMessage = "";
+                        String blindingFactorBase64 = "";
+
+                        try {
+                            // Obtener el mensaje a firmar y el factor de cegado
+                            String[] parts = BlindSignatureClient.prepareBlindMessage(evaluationData, presidentPublicKey).split("_");
+                            blindedMessage = parts[0];
+                            blindingFactorBase64 = parts[1];
+
+                        } catch (Exception ex) {
+                            JOptionPane.showMessageDialog(principal.getFrame(), "Error al preparar la evaluación para la firma a ciegas.", "Error", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+
+                        // Enviar la evaluación al servidor
+                        if (SocketHandler.sendEvaluation(SocketHandler.authToken, paintingId, stars, comments, blindedMessage)) {
+                            JOptionPane.showMessageDialog(principal.getFrame(), "Evaluación enviada correctamente.");
+                            // Recargar las pinturas no evaluadas
+                            // loadPaintings();
+
+
+                        } else {
+                            JOptionPane.showMessageDialog(principal.getFrame(), "Error al enviar la evaluación.", "Error", JOptionPane.ERROR_MESSAGE);
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
 
-
+        add(contentPanel, BorderLayout.CENTER);
 
     }
 
