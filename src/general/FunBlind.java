@@ -19,7 +19,7 @@ public class FunBlind {
         RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
 
         String evaluacion = "123;3;Define sus trazos de manera exquisita y refleja en su textura su tecnica.";
-        System.out.println("Prepare Randomize");
+        System.out.print("Prepare Randomize...\t");
         byte[] payload = evaluacion.getBytes();
         payload = prepareRandomize(payload);
         if(payload == null) {
@@ -28,21 +28,21 @@ public class FunBlind {
         }
         System.out.println("Done");
 
-        System.out.println("Blind:");
-        BlindData data = blind(payload, publicKey, privateKey);
+        System.out.print("Blind...\t");
+        BlindData data = blind(payload, publicKey);
         if(data == null) {
             System.out.println("Error");
             return;
         }
         System.out.println("Done");
-        System.out.println("BlindSign");
+        System.out.print("BlindSign...\t");
         byte[] BlindedSign = blindSign(publicKey, privateKey, data.getBlinded_msg());
         if(BlindedSign == null) {
             System.out.println("Error");
             return;
         }
         System.out.println("Done");
-        System.out.println("Finalize");
+        System.out.print("Finalize...\t");
         byte[] sig = finalize(publicKey, payload, data.getBlinded_msg(), data.getInv());
         if(sig == null) {
             System.out.println("Error");
@@ -75,7 +75,7 @@ public class FunBlind {
         return null;
     }
 
-    public static BlindData blind(byte[] message, RSAPublicKey destKey, RSAPrivateKey prueba) {
+    public static BlindData blind(byte[] message, RSAPublicKey destKey) {
         try {
 
             byte[] encoded_msg = EMSA_PSS_encode(message, destKey.getModulus().bitLength());
@@ -84,8 +84,7 @@ public class FunBlind {
             }
 
             BigInteger m = OS2IP(encoded_msg);
-            BigInteger mfirmado = m.modPow(prueba.getPrivateExponent(), prueba.getModulus());
-            System.out.println("Firma que debe conseguir: " + mfirmado.toString());
+
             if (!m.gcd(destKey.getModulus()).equals(BigInteger.ONE)) {
                 //invalid input error
                 return null;
@@ -100,9 +99,7 @@ public class FunBlind {
 
             BigInteger x = r.modPow(destKey.getPublicExponent(), destKey.getModulus());
 
-            BigInteger z = m.multiply(x);
-            z = z.mod(destKey.getModulus());
-
+            BigInteger z = m.multiply(x).mod(destKey.getModulus());
 
             int byteLen = (int) Math.ceil((double) destKey.getModulus().bitLength() / 8);
             byte[] blinded_msg = I2OSP(z, byteLen);
@@ -117,16 +114,14 @@ public class FunBlind {
     public static byte[] blindSign(RSAPublicKey p, RSAPrivateKey key, byte[] blinded_msg) {
         BigInteger m = OS2IP(blinded_msg);
         BigInteger s = m.modPow(key.getPrivateExponent(), key.getModulus());
-        BigInteger m2 = s.modPow(p.getPublicExponent(), key.getModulus());
+        BigInteger m2 = s.modPow(p.getPublicExponent(), p.getModulus());
 
         if(!m.equals(m2)) {
             return null;
         }
         int byteLen = (int) Math.ceil((double) key.getModulus().bitLength() / 8);
 
-        byte[] blind_sig = I2OSP(s, byteLen);
-
-        return blind_sig;
+        return I2OSP(s, byteLen);
     }
 
     public static byte[] finalize(RSAPublicKey key, byte[] msg, byte[] blind_sig, BigInteger inv) {
@@ -136,8 +131,7 @@ public class FunBlind {
         }
 
         BigInteger z = OS2IP(blind_sig);
-        BigInteger s = z.multiply(inv);
-        s = s.mod(key.getModulus());
+        BigInteger s = z.multiply(inv).mod(key.getModulus());
 
         byte[] sig = I2OSP(s, byteLen);
         if(RSASSA_PSS_VERIFY(key, msg, sig).equals("invalid signature")) {
@@ -158,7 +152,6 @@ public class FunBlind {
         int modBits = key.getModulus().bitLength();
         int emLen = (int) Math.ceil((double) (modBits-1)/8);
         byte[] em = I2OSP(m, emLen);
-        System.out.println("em: ");
 
         if(!EMSA_PSS_Verify(msg, em, modBits - 1).equals("consistent")) {
             return "invalid signature";
@@ -177,7 +170,6 @@ public class FunBlind {
         }
 
         if(em[em.length -1] != (byte)0xBC) {
-            System.out.println("0xbc");
             return "inconsistent";
         }
 
@@ -197,7 +189,6 @@ public class FunBlind {
         mask <<= 8 - bitsZero;
 
         if((byte)(maskedDb[0] ^ mask) != 0) {
-            System.out.println("zerobytes");
             return "inconsistent";
         }
 
@@ -214,14 +205,12 @@ public class FunBlind {
         int numBytes = emlen - 48 - 48 - 2;
         for(int i = 0; i < numBytes; i++) {
             if(db[i] != 0) {
-                System.out.println("first bytes are wrong");
                 return "inconsistent";
             }
 
         }
 
         if(db[numBytes+1] != 0x01) {
-            System.out.println("0x01");
             return "inconsistent";
         }
 
@@ -245,7 +234,6 @@ public class FunBlind {
 
         for (int i = 0; i < hv.length; i++) {
             if(hv[i] != h[i]) {
-                System.out.println("No son iguales");
                 return "inconsistent";
             }
 
@@ -259,7 +247,6 @@ public class FunBlind {
 
             byte[] mhash = hash(message);
             int emlen = (int) Math.ceil((double)emBits/8);
-            System.out.println(emlen + " < 48 + 48 + 2 (98)");
             //if emLen < hlen + slen + 2: hlen = slen = 48
             if(emlen < 98) {
                 //error: encoding error
@@ -319,7 +306,6 @@ public class FunBlind {
                     em[i] = h[i - maskedDb.length];
                 else
                     em[i] = (byte) 0xbc;
-
             }
 
             return em;
