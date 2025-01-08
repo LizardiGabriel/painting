@@ -23,7 +23,7 @@ public class MainWindow {
 
     public JPanel mainPanel(String token) {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(Estilos.SECONDARY_COLOR);
+        Estilos.applyDarkMode(panel);
 
         // Panel para la imagen
         imageLabel = new JLabel();
@@ -34,12 +34,12 @@ public class MainWindow {
 
         // Panel para los botones
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        buttonsPanel.setBackground(Estilos.SECONDARY_COLOR);
+        Estilos.applyDarkMode(buttonsPanel);
         panel.add(buttonsPanel, BorderLayout.SOUTH);
 
         // Botón para seleccionar imagen
         JButton browseButton = new JButton("Seleccionar Imagen");
-        Estilos.styleButton(browseButton);
+        Estilos.styleMainButton(browseButton);
         buttonsPanel.add(browseButton);
 
         // Botón para enviar imagen
@@ -67,6 +67,9 @@ public class MainWindow {
                 if (returnValue == JFileChooser.APPROVE_OPTION) {
                     selectedFile[0] = fileChooser.getSelectedFile();
                     displayImage(selectedFile[0]);
+
+                    Estilos.styleMainButton(sendButton);
+                    Estilos.styleButton(browseButton);
                     sendButton.setEnabled(true);
                 }
             }

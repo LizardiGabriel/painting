@@ -8,6 +8,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.geom.RoundRectangle2D;
 import java.io.File;
 import java.io.FileInputStream;
 import java.security.PrivateKey;
@@ -18,19 +19,20 @@ public class PaintingCard extends JPanel {
     private PrivateKey privateKey;
     private Principal principal;
     private String judgeId;
+    private int paintingId;
 
     public PaintingCard(JSONObject painting, PrivateKey privateKey, Principal principal, String judgeId) throws Exception {
         this.privateKey = privateKey;
         this.principal = principal;
         this.judgeId = judgeId;
 
-        setBorder(BorderFactory.createLineBorder(Estilos.BORDER_COLOR, 1));
-        setBackground(Color.WHITE);
-        setPreferredSize(new Dimension(400, 350)); // Tamaño fijo para la card
-        setLayout(new GridBagLayout());
+        // Configuración del panel principal
+        setOpaque(false);
+        setPreferredSize(new Dimension(300, 350));
+        setLayout(new BorderLayout());
 
         // Obtener la información de la pintura
-        int paintingId = painting.getInt("id");
+        paintingId = painting.getInt("id");
         String filePath = painting.getString("file_path");
         String painterName = painting.getString("painter_name");
 
@@ -50,47 +52,41 @@ public class PaintingCard extends JPanel {
         byte[] decryptedImageBytes = decryptImage(filePath, aesKeyBase64, ivBase64);
         ImageIcon imageIcon = new ImageIcon(decryptedImageBytes);
         Image image = imageIcon.getImage();
-        Image scaledImage = image.getScaledInstance(280, 200, Image.SCALE_SMOOTH);
+
+        // Redimensionar la imagen (ajusta el tamaño según sea necesario)
+        Image scaledImage = image.getScaledInstance(280, 250, Image.SCALE_SMOOTH);
         imageIcon = new ImageIcon(scaledImage);
 
-        // Configurar GridBagConstraints para la imagen
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 3; // La imagen ocupa tres columnas
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(5, 5, 5, 5);
-
-        // Panel para la imagen
+        // Crear un JLabel para la imagen y configurarlo
         JLabel imageLabel = new JLabel(imageIcon);
-        imageLabel.setBorder(new EmptyBorder(5, 5, 5, 5));
-        add(imageLabel, gbc);
+        imageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        imageLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Configurar GridBagConstraints para el nombre del pintor
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.gridwidth = 3; // El nombre del pintor ocupa tres columnas
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(5, 5, 0, 5); // Sin inset inferior
+        // Configuración del panel de contenido
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.setOpaque(false);
+        contentPanel.add(imageLabel);
 
-        // Etiqueta para el nombre del pintor
-        JLabel painterLabel = new JLabel("Pintor: " + painterName);
+        // Etiqueta para el nombre del pintor y estrellas
+        JLabel painterLabel = new JLabel(painterName, SwingConstants.CENTER);
         painterLabel.setFont(Estilos.DEFAULT_FONT);
-        add(painterLabel, gbc);
+        painterLabel.setForeground(Estilos.TEXT_COLOR);
+        painterLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        contentPanel.add(painterLabel);
 
-        // Configurar GridBagConstraints para el botón de evaluar
-        gbc.gridx = 2;
-        gbc.gridy = 2;
-        gbc.gridwidth = 1; // El botón ocupa una columna
-        gbc.weightx = 0.3; // Botón ocupa menos espacio
-        gbc.anchor = GridBagConstraints.EAST;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.insets = new Insets(5, 0, 5, 5); // Insets para el botón
+        // Panel para los botones
+        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 10));
+        buttonsPanel.setOpaque(false);
 
-        // Botón de evaluar
+
+        // Botón "Evaluar"
         JButton evaluateButton = new JButton("Evaluar");
-        Estilos.styleButton(evaluateButton);
-        add(evaluateButton, gbc);
+        Estilos.styleMainButton(evaluateButton);
+        buttonsPanel.add(evaluateButton);
+
+        contentPanel.add(buttonsPanel);
+        add(contentPanel, BorderLayout.CENTER);
 
         // Acción del botón de evaluar
         evaluateButton.addActionListener(new ActionListener() {
@@ -98,7 +94,7 @@ public class PaintingCard extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 // Mostrar diálogo de evaluación
                 JPanel evaluationPanel = new JPanel(new GridBagLayout());
-                evaluationPanel.setBackground(Estilos.SECONDARY_COLOR);
+                Estilos.applyDarkMode(evaluationPanel);
                 evaluationPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
                 GridBagConstraints gbc = new GridBagConstraints();
@@ -124,6 +120,8 @@ public class PaintingCard extends JPanel {
                 evaluationPanel.add(commentsLabel, gbc);
 
                 JTextArea commentsArea = new JTextArea(5, 20);
+                Estilos.applyDarkMode(commentsArea);
+
                 commentsArea.setLineWrap(true);
                 commentsArea.setWrapStyleWord(true);
                 commentsArea.setFont(Estilos.DEFAULT_FONT);
@@ -182,5 +180,27 @@ public class PaintingCard extends JPanel {
             System.out.println("Error al descifrar la imagen: " + e);
             return null;
         }
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2d = (Graphics2D) g.create();
+        int width = getWidth();
+        int height = getHeight();
+
+        // Crear un rectángulo redondeado como fondo
+        RoundRectangle2D roundedRectangle = new RoundRectangle2D.Float(0, 0, width - 1, height - 1, 30, 30);
+
+        // Rellenar el fondo con un color sólido
+        g2d.setColor(Estilos.PRIMARY_COLOR);
+        g2d.fill(roundedRectangle);
+
+        // Dibujar el borde redondeado
+        g2d.setColor(Estilos.ACCENT_COLOR);
+        g2d.setStroke(new BasicStroke(2)); // Ajusta el grosor del borde según sea necesario
+        g2d.draw(roundedRectangle);
+
+        g2d.dispose();
     }
 }

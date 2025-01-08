@@ -33,7 +33,7 @@ public class RegisterPanel extends JPanel {
 
         JLabel titleLabel = new JLabel("Registro de Juez");
         titleLabel.setFont(new Font(Estilos.DEFAULT_FONT.getName(), Font.BOLD, 18));
-        titleLabel.setForeground(Estilos.PRIMARY_COLOR);
+        titleLabel.setForeground(Estilos.TEXT_COLOR);
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
         JLabel generatingLabel = new JLabel("Generando claves RSA-OAEP...");

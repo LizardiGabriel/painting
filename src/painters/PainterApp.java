@@ -1,5 +1,6 @@
 package painters;
 
+import general.Estilos;
 import general.FunEcdsa;
 import general.SocketHandler;
 import org.json.JSONObject;
@@ -26,29 +27,86 @@ public class PainterApp {
         this.principal = principal;
         this.currentPanel = principal.getCurrentPanel();
     }
+
+
+    public static void main(String[] args) {
+
+
+        try {
+            UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Principal principal = new Principal();
+        principal.getFrame().setVisible(false);
+
+
+        PainterApp painterApp = new PainterApp(principal);
+
+        JPanel panelDePrueba = painterApp.getConsentimientoPanel("usuarioEjemplo", "passwordEjemplo", "Nombre Ejemplo");
+
+        JFrame frameDePrueba = new JFrame("Prueba de Consentimiento Panel");
+        frameDePrueba.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frameDePrueba.getContentPane().add(panelDePrueba);
+        frameDePrueba.pack();
+        frameDePrueba.setLocationRelativeTo(null);
+        frameDePrueba.setVisible(true);
+    }
+
+
+
     public JPanel getCurrentPanel() {
         return currentPanel;
     }
 
     public JPanel getConsentimientoPanel(String username, String password, String nombre) {
-        JPanel panel = new JPanel(new GridLayout(4, 1, 10, 10));
-        JLabel consentimientoLabel = new JLabel("Firma el formulario de consentimiento");
-        JTextArea termsTextArea = new JTextArea(10, 30);
-        String terms = SocketHandler.getTYC();
+        JPanel panel = new JPanel(new GridBagLayout()); // Usar GridBagLayout
+        Estilos.applyDarkMode(panel);
 
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridwidth = GridBagConstraints.REMAINDER;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        JLabel consentimientoLabel = new JLabel("Firma el formulario de consentimiento");
+        consentimientoLabel.setFont(new Font(Estilos.DEFAULT_FONT.getName(), Font.BOLD, 16));
+        consentimientoLabel.setForeground(Estilos.TEXT_COLOR);
+        consentimientoLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        panel.add(consentimientoLabel, gbc);
+
+        JTextArea termsTextArea = new JTextArea(10, 30);
+        Estilos.applyDarkMode(termsTextArea);
+        String terms = SocketHandler.getTYC();
         termsTextArea.setText(terms);
         termsTextArea.setEditable(false);
+        termsTextArea.setFont(Estilos.DEFAULT_FONT);
+        termsTextArea.setLineWrap(true);
+        termsTextArea.setWrapStyleWord(true);
+        termsTextArea.setBorder(Estilos.FIELD_BORDER);
+
+
         JScrollPane scrollPane = new JScrollPane(termsTextArea);
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0; // Para que el JTextArea ocupe el espacio disponible
+        gbc.fill = GridBagConstraints.BOTH;
+        panel.add(scrollPane, gbc);
 
         JButton firmarButton = new JButton("Firmar");
-        JButton backButton = new JButton("Volver");
-        JButton downloadTyCButton = new JButton("Descargar Términos y Condiciones");
+        Estilos.styleMainButton(firmarButton);
+        panel.add(firmarButton, gbc);
 
-        panel.add(consentimientoLabel);
-        panel.add(scrollPane);
-        panel.add(firmarButton);
-        panel.add(backButton);
-        panel.add(downloadTyCButton);
+        JButton backButton = new JButton("Volver");
+        Estilos.styleButton(backButton);
+        panel.add(backButton, gbc);
+
+        JButton downloadTyCButton = new JButton("Descargar Términos y Condiciones");
+        Estilos.styleButton(downloadTyCButton);
+        panel.add(downloadTyCButton, gbc);
+
+
 
         firmarButton.addActionListener(e -> {
 
@@ -98,6 +156,28 @@ public class PainterApp {
                 // something went wrong
                 JOptionPane.showMessageDialog(principal.getFrame(), "Error en el registro", "Error", JOptionPane.ERROR_MESSAGE);
                 principal.showLoginFromAnyPanel();
+            }
+        });
+
+        downloadTyCButton.addActionListener(e -> {
+            try {
+                String userHome = System.getProperty("user.home");
+                String downloadsFolder = Paths.get(userHome, "Downloads").toString();
+                Path path = Paths.get(downloadsFolder);
+                if (!Files.exists(path)) {
+                    Files.createDirectories(path);
+                }
+
+                String fileName = "Terminos_y_Condiciones.txt";
+                String fileToSave = Paths.get(downloadsFolder, fileName).toString();
+
+                FileWriter fileWriter = new FileWriter(fileToSave);
+                fileWriter.write(terms);
+                fileWriter.close();
+                JOptionPane.showMessageDialog(principal.getFrame(), "Términos y Condiciones guardados en: " + fileToSave);
+
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(principal.getFrame(), "Error al descargar los Términos y Condiciones");
             }
         });
 

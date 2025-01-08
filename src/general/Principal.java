@@ -49,8 +49,9 @@ public class Principal {
 
     private void showLogin() {
         JPanel loginPanel = new JPanel(new GridBagLayout());
+        Estilos.applyDarkMode(loginPanel);
+
         loginPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
-        loginPanel.setBackground(Estilos.SECONDARY_COLOR);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridwidth = GridBagConstraints.REMAINDER;
         gbc.anchor = GridBagConstraints.NORTH;
@@ -73,7 +74,7 @@ public class Principal {
         passField.setBorder(Estilos.FIELD_BORDER);
 
         JButton loginButton = new JButton("Iniciar Sesión");
-        Estilos.styleButton(loginButton);
+        Estilos.styleMainButton(loginButton);
         JButton crearCuentaButton = new JButton("Crear Cuenta");
         Estilos.styleButton(crearCuentaButton);
 
@@ -124,7 +125,8 @@ public class Principal {
 
         // Panel para centrar el loginPanel
         JPanel centerPanel = new JPanel(new GridBagLayout());
-        centerPanel.setBackground(Estilos.SECONDARY_COLOR);
+        Estilos.applyDarkMode(centerPanel);
+
         centerPanel.add(loginPanel);
 
         frame.getContentPane().add(centerPanel, "login");
@@ -134,8 +136,9 @@ public class Principal {
 
     private void showCrearCuenta() {
         JPanel crearCuentaPanel = new JPanel(new GridBagLayout());
+        Estilos.applyDarkMode(crearCuentaPanel);
+
         crearCuentaPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
-        crearCuentaPanel.setBackground(Estilos.SECONDARY_COLOR);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridwidth = GridBagConstraints.REMAINDER;
         gbc.anchor = GridBagConstraints.NORTH;
@@ -172,7 +175,7 @@ public class Principal {
         userTypeComboBox.setBackground(Color.WHITE);
 
         JButton registerButton = new JButton("Registrar");
-        Estilos.styleButton(registerButton);
+        Estilos.styleMainButton(registerButton);
         JButton backButton = new JButton("Volver");
         Estilos.styleButton(backButton);
 
@@ -232,7 +235,7 @@ public class Principal {
 
         // Panel para centrar el crearCuentaPanel
         JPanel centerPanel = new JPanel(new GridBagLayout());
-        centerPanel.setBackground(Estilos.SECONDARY_COLOR);
+        Estilos.applyDarkMode(centerPanel);
         centerPanel.add(crearCuentaPanel);
 
         showPanel(centerPanel);

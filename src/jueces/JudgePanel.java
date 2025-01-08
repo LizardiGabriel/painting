@@ -10,7 +10,16 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.PrivateKey;
+
+
+import javax.imageio.ImageIO;
+
+
+
 
 public class JudgePanel extends JPanel {
 
@@ -44,31 +53,48 @@ public class JudgePanel extends JPanel {
 
         // Panel de título
         JPanel titlePanel = new JPanel();
-        titlePanel.setBackground(Estilos.SECONDARY_COLOR);
+        Estilos.applyDarkMode(titlePanel);
+
         JLabel titleLabel = new JLabel("Bienvenido, Juez");
         titleLabel.setFont(new Font(Estilos.DEFAULT_FONT.getName(), Font.BOLD, 24));
-        titleLabel.setForeground(Estilos.PRIMARY_COLOR);
+        titleLabel.setForeground(Estilos.TEXT_COLOR);
         titlePanel.add(titleLabel);
         add(titlePanel, BorderLayout.NORTH);
 
         // Panel para la navegación y la card
         JPanel contentPanel = new JPanel(new BorderLayout());
-        contentPanel.setBackground(Estilos.SECONDARY_COLOR);
+        Estilos.applyDarkMode(contentPanel);
 
         // Panel para los botones de navegación
         JPanel navigationPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        navigationPanel.setBackground(Estilos.SECONDARY_COLOR);
-        JButton prevButton = new JButton("Anterior");
+        Estilos.applyDarkMode(navigationPanel);
+
+        JButton prevButton = new JButton("");
         Estilos.styleButton(prevButton);
-        JButton nextButton = new JButton("Siguiente");
+        JButton nextButton = new JButton("");
         Estilos.styleButton(nextButton);
+
+        int iconWidth = 30;
+        int iconHeight = 30;
+
+        // Carga y escala la imagen prev.png
+        ImageIcon prevIcon = new ImageIcon("src/assets/prev.png");
+        Image prevImage = prevIcon.getImage().getScaledInstance(iconWidth, iconHeight, Image.SCALE_SMOOTH);
+        prevButton.setIcon(new ImageIcon(prevImage));
+
+        // Carga y escala la imagen next.png
+        ImageIcon nextIcon = new ImageIcon("src/assets/next.png");
+        Image nextImage = nextIcon.getImage().getScaledInstance(iconWidth, iconHeight, Image.SCALE_SMOOTH);
+        nextButton.setIcon(new ImageIcon(nextImage));
+
+
         navigationPanel.add(prevButton);
         navigationPanel.add(nextButton);
         contentPanel.add(navigationPanel, BorderLayout.NORTH); // Navegación en la parte superior
 
         // Panel para las cards
         cardsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        cardsPanel.setBackground(Estilos.SECONDARY_COLOR);
+        Estilos.applyDarkMode(cardsPanel);
         contentPanel.add(cardsPanel, BorderLayout.CENTER); // Panel de cards en el centro
 
         // Agregar contentPanel al panel principal
@@ -76,7 +102,7 @@ public class JudgePanel extends JPanel {
 
         // Panel inferior para el botón de cerrar sesión
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        bottomPanel.setBackground(Estilos.SECONDARY_COLOR);
+        Estilos.applyDarkMode(bottomPanel);
         JButton logOutButton = new JButton("Cerrar Sesión");
         Estilos.styleButton(logOutButton);
         bottomPanel.add(logOutButton);
@@ -136,4 +162,10 @@ public class JudgePanel extends JPanel {
         cardsPanel.revalidate();
         cardsPanel.repaint();
     }
+
+
+
+
+
+
 }

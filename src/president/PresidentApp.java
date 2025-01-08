@@ -33,7 +33,7 @@ public class PresidentApp {
         titlePanel.setBackground(Estilos.SECONDARY_COLOR);
         JLabel titleLabel = new JLabel("Bienvenido, Presidente");
         titleLabel.setFont(new Font(Estilos.DEFAULT_FONT.getName(), Font.BOLD, 24));
-        titleLabel.setForeground(Estilos.PRIMARY_COLOR);
+        titleLabel.setForeground(Estilos.TEXT_COLOR);
         titlePanel.add(titleLabel);
         mainPanel.add(titlePanel, BorderLayout.NORTH);
 
