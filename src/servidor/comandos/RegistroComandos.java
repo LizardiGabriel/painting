@@ -4,11 +4,15 @@ import general.FunEcdsa;
 import org.json.JSONObject;
 import servidor.Conexion;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Base64;
 
 public class RegistroComandos {
 
@@ -65,11 +69,13 @@ public class RegistroComandos {
 
         if (conexion != null) {
             try {
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                byte[] hash = digest.digest(password.getBytes("UTF-8"));
                 // Insertar en la tabla Users
                 String query = "INSERT INTO Users (user, password, type, nombre) VALUES (?, ?, ?, ?)";
                 PreparedStatement preparedStatement = conexion.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
                 preparedStatement.setString(1, user);
-                preparedStatement.setString(2, password);
+                preparedStatement.setString(2, Base64.getEncoder().encodeToString(hash));
                 preparedStatement.setString(3, "painter");
                 preparedStatement.setString(4, nombre);
                 int rows = preparedStatement.executeUpdate();
@@ -101,6 +107,10 @@ public class RegistroComandos {
                     ret = "500";
                     info = "Internal Server Error";
                 }
+            }catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+                System.out.println("Error al hashear la contraseña: " + e.getMessage());
+                ret = "500";
+                info = "Internal Server Error";
             } catch (SQLException e) {
                 System.out.println("Error SQL: " + e.getMessage());
                 ret = "500";
@@ -155,11 +165,13 @@ public class RegistroComandos {
 
         if (conexion != null) {
             try {
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                byte[] hash = digest.digest(password.getBytes("UTF-8"));
                 // Insertar en la tabla Users
                 String query = "INSERT INTO Users (user, password, type, nombre) VALUES (?, ?, ?, ?)";
                 PreparedStatement preparedStatement = conexion.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
                 preparedStatement.setString(1, user);
-                preparedStatement.setString(2, password);
+                preparedStatement.setString(2, Base64.getEncoder().encodeToString(hash));
                 preparedStatement.setString(3, "judge");
                 preparedStatement.setString(4, nombre);
                 int rows = preparedStatement.executeUpdate();
@@ -191,7 +203,16 @@ public class RegistroComandos {
                     ret = "500";
                     info = "Internal Server Error";
                 }
-            } catch (SQLException e) {
+            } catch (NoSuchAlgorithmException e) {
+                System.out.println("Error al hashear la contraseña: " + e.getMessage());
+                ret = "500";
+                info = "Internal Server Error";
+            }catch (UnsupportedEncodingException e) {
+                System.out.println("Error al hashear la contraseña: " + e.getMessage());
+                ret = "500";
+                info = "Internal Server Error";
+            }
+            catch (SQLException e) {
                 System.out.println("Error SQL: " + e.getMessage());
                 ret = "500";
                 info = "Internal Server Error";
@@ -246,11 +267,13 @@ public class RegistroComandos {
 
         if (conexion != null) {
             try {
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                byte[] hash = digest.digest(password.getBytes("UTF-8"));
                 // Insertar en la tabla Users
                 String query = "INSERT INTO Users (user, password, type, nombre) VALUES (?, ?, ?, ?)";
                 PreparedStatement preparedStatement = conexion.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
                 preparedStatement.setString(1, user);
-                preparedStatement.setString(2, password);
+                preparedStatement.setString(2, Base64.getEncoder().encodeToString(hash));
                 preparedStatement.setString(3, "president");
                 preparedStatement.setString(4, nombre);
                 int rows = preparedStatement.executeUpdate();
@@ -282,7 +305,11 @@ public class RegistroComandos {
                     ret = "500";
                     info = "Internal Server Error";
                 }
-            } catch (SQLException e) {
+            } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+                System.out.println("Error al hashear la contraseña: " + e.getMessage());
+                ret = "500";
+                info = "Internal Server Error";
+            }catch (SQLException e) {
                 System.out.println("Error SQL: " + e.getMessage());
                 ret = "500";
                 info = "Internal Server Error";

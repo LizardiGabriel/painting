@@ -3,10 +3,14 @@ package servidor.comandos;
 import org.json.JSONObject;
 import servidor.Conexion;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Base64;
 import java.util.UUID;
 
 public class AuthComandos {
@@ -26,10 +30,12 @@ public class AuthComandos {
 
         if (conexion != null) {
             try {
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                byte[] hash = digest.digest(password.getBytes("UTF-8"));
                 String query = "SELECT id, type, nombre FROM Users WHERE user = ? AND password = ?";
                 PreparedStatement preparedStatement = conexion.prepareStatement(query);
                 preparedStatement.setString(1, user);
-                preparedStatement.setString(2, password);
+                preparedStatement.setString(2, Base64.getEncoder().encodeToString(hash));
                 ResultSet resultSet = preparedStatement.executeQuery();
 
                 if (resultSet.next()) {
@@ -51,7 +57,11 @@ public class AuthComandos {
                 System.err.println("Error al autenticar: " + e.getMessage());
                 code = "500";
                 info = "Internal Server Error";
-            } finally {
+            } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+                System.err.println("Error al autenticar: " + e.getMessage());
+                code = "500";
+                info = "Internal Server Error";
+            }finally {
                 con.cerrar();
                 System.out.println("Conexión cerrada");
             }
