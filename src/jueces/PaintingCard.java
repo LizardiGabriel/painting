@@ -54,6 +54,7 @@ public class PaintingCard extends JPanel {
 
         // Descifrar la clave AES
         String aesKeyBase64 = FunRsa.decryptRsa(encryptedAesKeyBase64, this.privateKey);
+        System.out.println("AES Key: " + aesKeyBase64);
         // Descifrar la imagen
         byte[] decryptedImageBytes = decryptImage(filePath, aesKeyBase64, ivBase64);
         ImageIcon imageIcon = new ImageIcon(decryptedImageBytes);

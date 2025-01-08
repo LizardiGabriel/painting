@@ -186,6 +186,7 @@ public class JudgePanel extends JPanel {
         if (paintingsJson != null) {
             try {
                 this.paintingsArray = new JSONArray(paintingsJson);
+                System.out.println("pinturas: "+paintingsArray);
                 this.currentCardIndex = 0;
                 updateCardsPanel();
             } catch (Exception e) {
@@ -199,6 +200,7 @@ public class JudgePanel extends JPanel {
     private void updateCardsPanel() {
         cardsPanel.removeAll();
         if (paintingsArray != null && paintingsArray.length() > 0) {
+            System.out.println("si debo mostrar algo");
             try {
                 JSONObject painting = paintingsArray.getJSONObject(currentCardIndex);
                 boolean isEvaluated = painting.has("stars");
@@ -209,6 +211,8 @@ public class JudgePanel extends JPanel {
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(principal.getFrame(), "Error al crear la card de la pintura.", "Error", JOptionPane.ERROR_MESSAGE);
             }
+        }else{
+            System.out.println("no debo mostrar nada");
         }
         cardsPanel.revalidate();
         cardsPanel.repaint();

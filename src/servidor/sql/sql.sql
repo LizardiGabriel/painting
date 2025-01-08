@@ -83,5 +83,7 @@ select * from Presidents;
 
 select * from Evaluations;
 
+select * from Encrypted_AES_Keys;
+
 SELECT id, type, nombre FROM Users WHERE user = 'painter1' AND password = 'painter1';
 

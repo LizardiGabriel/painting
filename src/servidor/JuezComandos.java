@@ -55,6 +55,9 @@ public class JuezComandos {
         String[] tokenParts = token.split("_");
         String judgeId = tokenParts[0];
 
+        int judge_id = Integer.parseInt(judgeId);
+        System.out.println("Juez ID: " + judge_id);
+
         Conexion con = new Conexion();
         Connection conexion = con.conectar();
         JSONObject response = new JSONObject();
@@ -62,15 +65,19 @@ public class JuezComandos {
         if (conexion != null) {
             try {
                 // Obtener las pinturas asignadas al juez, incluyendo el nombre del pintor
+
                 String query = "SELECT p.id, p.encrypted_painting_data, u.nombre AS painter_name " +
                         "FROM Paintings p " +
                         "INNER JOIN Encrypted_AES_Keys ek ON p.id = ek.painting_id " +
                         "INNER JOIN Painters pt ON p.painter_id = pt.id " +
                         "INNER JOIN Users u ON pt.user_id = u.id " +
-                        "LEFT JOIN Evaluations e ON p.id = e.painting_id AND e.judge_id = ek.judge_id " + // Join con Evaluations
-                        "WHERE ek.judge_id = ? AND (e.id IS NULL OR e.is_evaluated = FALSE)"; // Filtrar por juez y si no hay evaluación o is_evaluated es falso
+                        "LEFT JOIN Evaluations e ON p.id = e.painting_id AND e.judge_id = ek.judge_id " +
+                        "INNER JOIN Judges j ON ek.judge_id = j.id " +
+                        "INNER JOIN Users u2 ON j.user_id = u2.id " +
+                        "WHERE u2.id = ? AND (e.id IS NULL OR e.is_evaluated = FALSE)";
+
                 PreparedStatement preparedStatement = conexion.prepareStatement(query);
-                preparedStatement.setInt(1, Integer.parseInt(judgeId));
+                preparedStatement.setInt(1, judge_id);
                 ResultSet resultSet = preparedStatement.executeQuery();
 
 
@@ -82,6 +89,7 @@ public class JuezComandos {
                     painting.put("file_path", resultSet.getString("encrypted_painting_data"));
                     painting.put("painter_name", resultSet.getString("painter_name"));
                     // ... agregar más información si es necesario ...
+                    System.out.println("pintura: "+painting.toString());
                     paintingsArray.put(painting);
                 }
 
@@ -106,10 +114,10 @@ public class JuezComandos {
 
 
     // el juez solicita la clave AES cifrada y el IV para una pintura
-    public static String getEncryptedAESKeyAndIV(JSONObject request){
+    public static String getEncryptedAESKeyAndIV(JSONObject request) {
         String token = request.getString("token");
         String[] tokenParts = token.split("_");
-        String judgeId = tokenParts[0];
+        String userId = tokenParts[0]; // Ahora obtenemos el userId del token
 
         String paintingId = request.getString("painting_id");
 
@@ -118,33 +126,50 @@ public class JuezComandos {
 
         if (conexion != null) {
             try {
-                // Obtener la clave AES cifrada y el IV para la pintura
-                String query = "SELECT ek.encrypted_aes_key, p.iv, p.encrypted_painting_data " +
-                        "FROM Encrypted_AES_Keys ek " +
-                        "INNER JOIN Paintings p ON ek.painting_id = p.id " +
-                        "WHERE ek.painting_id = ? AND ek.judge_id = ?";
-                PreparedStatement preparedStatement = conexion.prepareStatement(query);
-                preparedStatement.setInt(1, Integer.parseInt(paintingId));
-                preparedStatement.setInt(2, Integer.parseInt(judgeId));
-                ResultSet resultSet = preparedStatement.executeQuery();
+                // Primero, necesitamos obtener el judgeId a partir del userId
+                String getJudgeIdQuery = "SELECT j.id FROM Judges j INNER JOIN Users u ON j.user_id = u.id WHERE u.id = ?";
+                PreparedStatement getJudgeIdStatement = conexion.prepareStatement(getJudgeIdQuery);
+                getJudgeIdStatement.setInt(1, Integer.parseInt(userId));
+                ResultSet judgeIdResult = getJudgeIdStatement.executeQuery();
 
-                if (resultSet.next()) {
-                    JSONObject response = new JSONObject();
-                    response.put("response", "200");
-                    response.put("info", "OK");
-                    response.put("encrypted_aes_key", resultSet.getString("encrypted_aes_key"));
-                    response.put("iv", resultSet.getString("iv"));
-                    response.put("encrypted_painting_data", resultSet.getString("encrypted_painting_data"));
-                    return response.toString();
+                if (judgeIdResult.next()) {
+                    int judgeId = judgeIdResult.getInt("id"); // Obtenemos el judgeId
+
+                    // Ahora, usamos el judgeId para obtener la clave AES cifrada y el IV
+                    String query = "SELECT ek.encrypted_aes_key, p.iv, p.encrypted_painting_data " +
+                            "FROM Encrypted_AES_Keys ek " +
+                            "INNER JOIN Paintings p ON ek.painting_id = p.id " +
+                            "WHERE ek.painting_id = ? AND ek.judge_id = ?";
+                    PreparedStatement preparedStatement = conexion.prepareStatement(query);
+                    preparedStatement.setInt(1, Integer.parseInt(paintingId));
+                    preparedStatement.setInt(2, judgeId); // Usamos el judgeId obtenido
+                    ResultSet resultSet = preparedStatement.executeQuery();
+
+                    if (resultSet.next()) {
+                        JSONObject response = new JSONObject();
+                        response.put("response", "200");
+                        response.put("info", "OK");
+                        response.put("encrypted_aes_key", resultSet.getString("encrypted_aes_key"));
+                        response.put("iv", resultSet.getString("iv"));
+                        response.put("encrypted_painting_data", resultSet.getString("encrypted_painting_data"));
+                        return response.toString();
+                    } else {
+                        JSONObject response = new JSONObject();
+                        response.put("response", "404");
+                        response.put("info", "Not Found");
+                        return response.toString();
+                    }
                 } else {
                     JSONObject response = new JSONObject();
                     response.put("response", "404");
-                    response.put("info", "Not Found");
+                    response.put("info", "Judge ID not found for this user");
                     return response.toString();
                 }
 
             } catch (SQLException e) {
                 throw new RuntimeException(e);
+            } finally {
+                con.cerrar();
             }
         } else {
             JSONObject response = new JSONObject();
@@ -152,7 +177,6 @@ public class JuezComandos {
             response.put("info", "Internal Server Error");
             return response.toString();
         }
-
     }
 
     public static String evaluatePainting(JSONObject request) throws SQLException {
