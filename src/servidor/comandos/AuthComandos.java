@@ -4,6 +4,7 @@ import org.json.JSONObject;
 import servidor.Conexion;
 
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
@@ -35,7 +36,7 @@ public class AuthComandos {
                 String query = "SELECT id, type, nombre FROM Users WHERE user = ? AND password = ?";
                 PreparedStatement preparedStatement = conexion.prepareStatement(query);
                 preparedStatement.setString(1, user);
-                preparedStatement.setString(2, Base64.getEncoder().encodeToString(hash));
+                preparedStatement.setString(2, new BigInteger(1, hash).toString(16).toLowerCase());
                 ResultSet resultSet = preparedStatement.executeQuery();
 
                 if (resultSet.next()) {

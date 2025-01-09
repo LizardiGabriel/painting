@@ -5,6 +5,7 @@ import org.json.JSONObject;
 import servidor.Conexion;
 
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
@@ -75,7 +76,7 @@ public class RegistroComandos {
                 String query = "INSERT INTO Users (user, password, type, nombre) VALUES (?, ?, ?, ?)";
                 PreparedStatement preparedStatement = conexion.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
                 preparedStatement.setString(1, user);
-                preparedStatement.setString(2, Base64.getEncoder().encodeToString(hash));
+                preparedStatement.setString(2, new BigInteger(1, hash).toString(16).toLowerCase());
                 preparedStatement.setString(3, "painter");
                 preparedStatement.setString(4, nombre);
                 int rows = preparedStatement.executeUpdate();
@@ -171,7 +172,7 @@ public class RegistroComandos {
                 String query = "INSERT INTO Users (user, password, type, nombre) VALUES (?, ?, ?, ?)";
                 PreparedStatement preparedStatement = conexion.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
                 preparedStatement.setString(1, user);
-                preparedStatement.setString(2, Base64.getEncoder().encodeToString(hash));
+                preparedStatement.setString(2, new BigInteger(1, hash).toString(16).toLowerCase());
                 preparedStatement.setString(3, "judge");
                 preparedStatement.setString(4, nombre);
                 int rows = preparedStatement.executeUpdate();
@@ -273,7 +274,7 @@ public class RegistroComandos {
                 String query = "INSERT INTO Users (user, password, type, nombre) VALUES (?, ?, ?, ?)";
                 PreparedStatement preparedStatement = conexion.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
                 preparedStatement.setString(1, user);
-                preparedStatement.setString(2, Base64.getEncoder().encodeToString(hash));
+                preparedStatement.setString(2, new BigInteger(1, hash).toString(16).toLowerCase());
                 preparedStatement.setString(3, "president");
                 preparedStatement.setString(4, nombre);
                 int rows = preparedStatement.executeUpdate();
