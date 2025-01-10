@@ -1,9 +1,7 @@
 package president;
 
-import general.Estilos;
+import general.*;
 import jueces.BlindSignatureClient;
-import general.Principal;
-import general.SocketHandler;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,12 +15,11 @@ import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.security.interfaces.RSAPrivateKey;
 import java.util.Base64;
 import java.security.NoSuchAlgorithmException;
 import java.io.File;
 import java.nio.file.Files;
-
-import general.FunRsa;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -97,7 +94,6 @@ public class PresidentApp {
             public void actionPerformed(ActionEvent e) {
                 String selectedEvaluation = evaluationsList.getSelectedValue();
                 if (selectedEvaluation != null) {
-                    // Extraer el ID de la evaluación seleccionada de la lista
                     int evaluationId = Integer.parseInt(selectedEvaluation.split(",")[0].split(": ")[1].trim());
 
                     // Verificar que la clave privada ya está cargada
@@ -109,11 +105,8 @@ public class PresidentApp {
                     try {
                         // Obtener la evaluación a firmar a ciegas
                         String blindedEvaluation = getBlindedEvaluation(evaluationId);
+                        String blindSignature = FunBlindSignature.blindSign((RSAPrivateKey) privateKey, blindedEvaluation);
 
-                        // Firmar a ciegas la evaluacion
-                        String blindSignature = BlindSignatureClient.blindSign(blindedEvaluation, privateKey);
-
-                        // Enviar la firma a ciegas al servidor
                         if(blindSignature != null && !blindSignature.isEmpty()){
                             if (SocketHandler.sendBlindedSignature(token, evaluationId, blindSignature)) {
                                 // Actualizar la lista de evaluaciones

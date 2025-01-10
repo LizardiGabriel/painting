@@ -179,14 +179,6 @@ public class FunRsa {
         return keyFactory.generatePrivate(keySpec);
     }
 
-    public static PublicKey getPublicKeyPSSFromBase64(String publicKeyBase64) throws Exception {
-        byte[] publicKeyBytes = Base64.getDecoder().decode(publicKeyBase64);
-        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicKeyBytes);
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        return keyFactory.generatePublic(keySpec);
-    }
-
-
 }
 
 

@@ -258,14 +258,13 @@ public class SocketHandler {
     }
 
 
-    public static boolean sendEvaluation(String token, int paintingId, int stars, String comments, String blindedMessage) {
+    public static boolean sendEvaluation(String token, int paintingId, int stars, String comments) {
         JSONObject json = new JSONObject();
         json.put("comando", "EVALUATE_PAINTING");
         json.put("token", token);
         json.put("paintingId", paintingId);
         json.put("stars", stars);
         json.put("comments", comments);
-        json.put("blindedMessage", blindedMessage);
         String jsonDatos = json.toString();
 
         String respuesta = manejoSocket(jsonDatos);

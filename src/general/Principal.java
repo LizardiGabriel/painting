@@ -37,8 +37,8 @@ public class Principal {
 
     private void initialize() {
         frame = new JFrame();
-        frame.setTitle("Sistema de Pintura");
-        frame.setBounds(100, 100, 500, 600);
+        frame.setTitle("Painting Competition");
+        frame.setBounds(20, 20, 1600, 900);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().setLayout(new CardLayout(0, 0));
         frame.getContentPane().setBackground(Estilos.SECONDARY_COLOR);

@@ -186,24 +186,8 @@ public class PaintingCard extends JPanel {
                         int stars = (int) spinner.getValue();
                         String comments = commentsArea.getText();
 
-                        // Preparar la evaluación para la firma
-                        String evaluationData = paintingId + ";" + stars + ";" + comments;
-                        String blindedMessage = "";
-                        String blindingFactorBase64 = "";
-
-                        try {
-                            // Obtener el mensaje a firmar y el factor de cegado
-                            String[] parts = BlindSignatureClient.prepareBlindMessage(evaluationData, presidentPublicKey).split("_");
-                            blindedMessage = parts[0];
-                            blindingFactorBase64 = parts[1];
-
-                        } catch (Exception ex) {
-                            JOptionPane.showMessageDialog(principal.getFrame(), "Error al preparar la evaluación para la firma a ciegas.", "Error", JOptionPane.ERROR_MESSAGE);
-                            return;
-                        }
-
                         // Enviar la evaluación al servidor
-                        if (SocketHandler.sendEvaluation(SocketHandler.authToken, paintingId, stars, comments, blindedMessage)) {
+                        if (SocketHandler.sendEvaluation(SocketHandler.authToken, paintingId, stars, comments)) {
                             JOptionPane.showMessageDialog(principal.getFrame(), "Evaluación enviada correctamente.");
                             // Recargar las pinturas no evaluadas
                             // loadPaintings();

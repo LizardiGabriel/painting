@@ -59,7 +59,7 @@ CREATE TABLE Evaluations (
     comments TEXT,
     is_evaluated bool,
     blinded_message TEXT, -- Nuevo
-    blinded_evaluation TEXT, -- Representación cegada de la evaluación
+    inv TEXT, -- Representación base64 del inverso de r.
     blind_signature TEXT, -- Firma ciega del presidente
     evaluation_signature TEXT, -- Firma de la evaluación por el juez
     FOREIGN KEY (painting_id) REFERENCES Paintings(id),

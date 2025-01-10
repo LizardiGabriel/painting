@@ -1,9 +1,13 @@
 package servidor.comandos;
 
+import general.FunBlindSignature;
+import general.FunRsa;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import servidor.Conexion;
 
+import java.security.PublicKey;
+import java.security.interfaces.RSAPublicKey;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -252,13 +256,42 @@ public class PresidentComandos {
         Connection conexion = con.conectar();
         JSONObject response = new JSONObject();
 
+
+
         if (conexion != null) {
             try {
+
+                String query2 = "SELECT p.public_key_rsa FROM Presidents p INNER JOIN Users u ON p.user_id = u.id WHERE u.type = 'president'";
+                PreparedStatement preparedStatement2 = conexion.prepareStatement(query2);
+                ResultSet resultSet = preparedStatement2.executeQuery();
+                resultSet.next();
+
+                //Get the public key
+                String publicKeyString = resultSet.getString("public_key_rsa");
+                PublicKey publicKey = FunRsa.getPublicKeyFromBase64(publicKeyString);
+
+                //Get the real evaluation (Server execution)
+                String query3 = "SELECT painting_id, stars, comments, inv FROM Evaluations WHERE id = ?";
+                PreparedStatement preparedStatement3 = conexion.prepareStatement(query3);
+                preparedStatement3.setInt(1, evaluationId);
+                ResultSet resultSet2 = preparedStatement3.executeQuery();
+                resultSet2.next();
+
+                //Get the public key
+                String stars = resultSet2.getString("stars");
+                String comments = resultSet2.getString("comments");
+                String paintingId = resultSet2.getString("painting_id");
+                String inv = resultSet2.getString("inv");
+                String evaluationData = paintingId + ";" + stars + ";" + comments;
+
+                String sig = FunBlindSignature.finalize((RSAPublicKey) publicKey, evaluationData, blindSignature, inv);
+                System.out.println("Unblind the chairman signature");
                 // Actualizar la evaluación con la firma a ciegas
-                String updateQuery = "UPDATE Evaluations SET blind_signature = ? WHERE id = ?";
+                String updateQuery = "UPDATE Evaluations SET blind_signature = ?, evaluation_signature = ? WHERE id = ?";
                 PreparedStatement preparedStatement = conexion.prepareStatement(updateQuery);
                 preparedStatement.setString(1, blindSignature);
-                preparedStatement.setInt(2, evaluationId);
+                preparedStatement.setString(2, sig);
+                preparedStatement.setInt(3, evaluationId);
 
                 int rowsUpdated = preparedStatement.executeUpdate();
                 if (rowsUpdated > 0) {
@@ -272,6 +305,8 @@ public class PresidentComandos {
                 System.err.println("Error al guardar la firma a ciegas en la base de datos: " + e.getMessage());
                 response.put("response", "500");
                 response.put("info", "Internal Server Error");
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             } finally {
                 con.cerrar();
             }

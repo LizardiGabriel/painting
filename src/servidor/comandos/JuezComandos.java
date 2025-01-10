@@ -1,13 +1,18 @@
 package servidor.comandos;
 
+import general.FunBlindSignature;
+import general.FunRsa;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import servidor.Conexion;
 
+import java.security.PublicKey;
+import java.security.interfaces.RSAPublicKey;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Base64;
 
 public class JuezComandos {
 
@@ -185,8 +190,6 @@ public class JuezComandos {
         int paintingId = request.getInt("paintingId");
         int stars = request.getInt("stars");
         String comments = request.getString("comments");
-        // Obtener el blindedMessage del JSON
-        String blindedMessage = request.getString("blindedMessage");
 
         // Validar el token
         String[] tokenParts = token.split("_");
@@ -212,26 +215,33 @@ public class JuezComandos {
             judgeId = judgeIdResult.getString("id");
         }
 
-
-
         if (conexion != null) {
             try {
+
+                String query2 = "SELECT p.public_key_rsa FROM Presidents p INNER JOIN Users u ON p.user_id = u.id WHERE u.type = 'president'";
+                PreparedStatement preparedStatement = conexion.prepareStatement(query2);
+                ResultSet resultSet = preparedStatement.executeQuery();
+                resultSet.next();
+
+                String presindentKey = resultSet.getString("public_key_rsa");
                 // Preparar la consulta SQL
-                String query = "INSERT INTO Evaluations (painting_id, judge_id, stars, comments, blinded_message) " +
-                        "VALUES (?, ?, ?, ?, ?)"; // Ajusta los campos según tu tabla
-                PreparedStatement preparedStatement = conexion.prepareStatement(query);
-                preparedStatement.setInt(1, paintingId);
-                preparedStatement.setInt(2, Integer.parseInt(judgeId));
-                preparedStatement.setInt(3, stars);
-                preparedStatement.setString(4, comments);
+                String query = "INSERT INTO Evaluations (painting_id, judge_id, stars, comments, blinded_message, inv) " +
+                        "VALUES (?, ?, ?, ?, ?, ?)"; // Ajusta los campos según tu tabla
+                PreparedStatement preparedStatement2 = conexion.prepareStatement(query);
+                preparedStatement2.setInt(1, paintingId);
+                preparedStatement2.setInt(2, Integer.parseInt(judgeId));
+                preparedStatement2.setInt(3, stars);
+                preparedStatement2.setString(4, comments);
 
+                String evaluationData = paintingId + ";" + stars + ";" + comments;
+                PublicKey publicKey = FunRsa.getPublicKeyFromBase64(presindentKey);
+
+                String[] blinded = FunBlindSignature.blind(evaluationData, (RSAPublicKey) publicKey);
                 // Guardar el blindedMessage en la base de datos
-                preparedStatement.setString(5, blindedMessage);
+                preparedStatement2.setString(5, blinded[0]);
+                preparedStatement2.setString(6, blinded[1]);
 
-                int rows = preparedStatement.executeUpdate();
-
-
-
+                int rows = preparedStatement2.executeUpdate();
 
                 if (rows > 0) {
 
@@ -259,6 +269,8 @@ public class JuezComandos {
                 System.out.println("Error SQL: " + e.getMessage());
                 response.put("response", "500");
                 response.put("info", "Internal Server Error");
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             } finally {
                 con.cerrar();
             }
