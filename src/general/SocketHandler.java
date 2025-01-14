@@ -216,24 +216,6 @@ public class SocketHandler {
     }
 
 
-    public static String getEvaluatedPaintingsForJudge(String token) {
-        JSONObject json = new JSONObject();
-        json.put("comando", "getEvaluatedPaintingsForJudge");
-        json.put("token", token);
-        String jsonDatos = json.toString();
-
-        String respuesta = manejoSocket(jsonDatos);
-
-        // Manejar la respuesta
-        JSONObject response = new JSONObject(respuesta);
-        if (response.getString("response").equals("200")) {
-            return response.getJSONArray("paintings").toString(); // Devuelve el array de pinturas en formato JSON
-        } else {
-            System.out.println("Error al obtener la lista de pinturas: " + response.getString("info"));
-            return null;
-        }
-    }
-
 
 
 

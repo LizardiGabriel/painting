@@ -1,6 +1,7 @@
 package general;
 
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.security.interfaces.RSAPrivateKey;
@@ -8,10 +9,9 @@ import java.security.interfaces.RSAPublicKey;
 import java.util.Base64;
 
 public class FunBlindSignature {
-
     //'Blind' del mensaje(evaluacion) para que el chairman lo firme
     public static String[] blind(String evaluacion, RSAPublicKey publicKey) throws Exception{
-        byte[] message = evaluacion.getBytes("UTF-8");
+        byte[] message = evaluacion.getBytes(StandardCharsets.UTF_8);
 
         BigInteger publicExponent = publicKey.getPublicExponent();
         BigInteger modulus = publicKey.getModulus();
@@ -135,7 +135,7 @@ public class FunBlindSignature {
 
     private static String emsaPSSVerify(String message, byte[] em, int emBits) throws Exception {
         MessageDigest sha384 = MessageDigest.getInstance("SHA-384");
-        byte[] mhash = sha384.digest(message.getBytes("UTF-8"));
+        byte[] mhash = sha384.digest(message.getBytes(StandardCharsets.UTF_8));
         int hlen = sha384.getDigestLength();
         int emlen = emBits / 8;
 

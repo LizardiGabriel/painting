@@ -134,6 +134,9 @@ public class PresidentComandos {
             response.put("info", "Token inválido o expirado");
             return response.toString();
         }
+
+
+        // todo este no es el presidentid, es el judgeid
         String presidentId = tokenParts[0]; // Podrías necesitar el ID del presidente
 
         JSONObject response = new JSONObject();

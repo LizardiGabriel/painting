@@ -19,7 +19,6 @@ import java.util.Base64;
 public class PaintingCard extends JPanel {
 
     private PrivateKey privateKey;
-    private PublicKey presidentPublicKey;
     private Principal principal;
     private String judgeId;
     private int paintingId;
@@ -29,8 +28,6 @@ public class PaintingCard extends JPanel {
         this.principal = principal;
         this.judgeId = judgeId;
 
-        // Obtener la clave pública del presidente al inicio
-        this.presidentPublicKey = getPresidentPublicKey();
 
         // Configuración del panel principal
         setOpaque(false); // Importante para que se vea el fondo redondeado
@@ -110,19 +107,10 @@ public class PaintingCard extends JPanel {
             commentsArea.setEditable(false);
             commentsArea.setLineWrap(true);
             commentsArea.setWrapStyleWord(true);
-            commentsArea.setFont(Estilos.DEFAULT_FONT);
-            commentsArea.setForeground(Estilos.TEXT_COLOR);
-            commentsArea.setBackground(Estilos.SECONDARY_COLOR);
-            commentsArea.setBorder(new EmptyBorder(5, 10, 5, 10));
+            Estilos.applyDarkMode(commentsArea);
             contentPanel.add(commentsArea);
 
-            // Aquí deberías verificar la firma con la clave pública del presidente
-            // y mostrar un mensaje de verificación o un sello.
-            // Ejemplo:
-            // boolean isVerified = BlindSignatureClient.verifySignature(evaluation, blindSignature, presidentPublicKey);
-            // JLabel verificationLabel = new JLabel(isVerified ? "Firma Verificada" : "Firma no válida");
-            // contentPanel.add(verificationLabel);
-            // Reemplaza 'evaluation' con la información necesaria para la verificación
+
 
         } else {
             // Panel para los botones
@@ -203,18 +191,6 @@ public class PaintingCard extends JPanel {
 
         add(contentPanel, BorderLayout.CENTER);
 
-    }
-
-    private PublicKey getPresidentPublicKey() {
-        String publicKeyBase64 = SocketHandler.getPresidentPublicKey(SocketHandler.authToken);
-        if (publicKeyBase64 != null && !publicKeyBase64.isEmpty()) {
-            try {
-                return FunRsa.getPublicKeyFromBase64(publicKeyBase64);
-            } catch (Exception e) {
-                System.err.println("Error al obtener la clave pública del presidente: " + e.getMessage());
-            }
-        }
-        return null;
     }
 
 

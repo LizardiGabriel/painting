@@ -1,7 +1,6 @@
 package president;
 
 import general.*;
-import jueces.BlindSignatureClient;
 
 import javax.swing.*;
 import java.awt.*;
@@ -229,7 +228,7 @@ public class PresidentApp {
             File selectedFile = fileChooser.getSelectedFile();
             try {
                 String privateKeyBase64 = new String(Files.readAllBytes(selectedFile.toPath()));
-                return FunRsa.getPrivateKeyPSSFromBase64(privateKeyBase64);
+                return FunRsa.getPrivateKeyFromBase64(privateKeyBase64);
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(parent, "Error al cargar la clave privada: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }

@@ -108,36 +108,13 @@ public class JudgePanel extends JPanel {
         JButton logOutButton = new JButton("Cerrar Sesión");
         Estilos.styleButton(logOutButton);
 
-        JToggleButton toggleEvaluatedButton = new JToggleButton("Mostrar Evaluadas");
-        bottomPanel.add(toggleEvaluatedButton);
-
 
         bottomPanel.add(logOutButton);
 
 
 
-
-
-
-
-
-
         add(bottomPanel, BorderLayout.SOUTH);
 
-
-
-        toggleEvaluatedButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (toggleEvaluatedButton.isSelected()) {
-                    toggleEvaluatedButton.setText("Mostrar No Evaluadas");
-                    loadEvaluatedPaintings();
-                } else {
-                    toggleEvaluatedButton.setText("Mostrar Evaluadas");
-                    loadPaintings();
-                }
-            }
-        });
 
         // Acción del botón de cerrar sesión
         logOutButton.addActionListener(e -> {
@@ -163,23 +140,6 @@ public class JudgePanel extends JPanel {
         // Cargar la lista de pinturas al inicio
         loadPaintings();
     }
-
-
-    private void loadEvaluatedPaintings() {
-        String evaluatedPaintingsJson = SocketHandler.getEvaluatedPaintingsForJudge(token);
-        if (evaluatedPaintingsJson != null) {
-            try {
-                this.paintingsArray = new JSONArray(evaluatedPaintingsJson);
-                this.currentCardIndex = 0;
-                updateCardsPanel();
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(principal.getFrame(), "Error al cargar la lista de pinturas evaluadas.", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        } else {
-            JOptionPane.showMessageDialog(principal.getFrame(), "No se pudieron obtener las pinturas evaluadas.", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
 
 
 
