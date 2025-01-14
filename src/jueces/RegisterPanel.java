@@ -63,8 +63,8 @@ public class RegisterPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 // descargar clave privada en un archivo
                 try {
-                    String userHome = System.getProperty("user.home");
-                    String downloadsFolder = Paths.get(userHome, "Downloads/juez").toString();
+                    String userHome = System.getProperty("user.dir");
+                    String downloadsFolder = Paths.get(userHome, "keys/juez").toString();
                     Path path = Paths.get(downloadsFolder);
                     if (!Files.exists(path)) {
                         Files.createDirectories(path);
@@ -84,7 +84,7 @@ public class RegisterPanel extends JPanel {
                 }
 
                 // si se descargaron -> registrar en el server usando el token de administrador temporal
-                if (SocketHandler.registrarJuez(SocketHandler.authToken, username, nombre, publicKeyBase64, password)) {
+                if (SocketHandler.registrarJuez(username, nombre, publicKeyBase64, password)) {
                     JOptionPane.showMessageDialog(principal.getFrame(), "Cuenta registrada exitosamente", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                     principal.showLoginFromAnyPanel();
                 } else {

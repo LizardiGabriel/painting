@@ -19,18 +19,14 @@ import java.util.Base64;
 public class PaintingCard extends JPanel {
 
     private PrivateKey privateKey;
-    private PublicKey presidentPublicKey;
     private Principal principal;
-    private String judgeId;
     private int paintingId;
 
-    public PaintingCard(JSONObject painting, PrivateKey privateKey, Principal principal, String judgeId, boolean isEvaluated) throws Exception {
+    public PaintingCard(String token, JSONObject painting, PrivateKey privateKey, Principal principal) throws Exception {
         this.privateKey = privateKey;
         this.principal = principal;
-        this.judgeId = judgeId;
 
         // Obtener la clave pública del presidente al inicio
-        this.presidentPublicKey = getPresidentPublicKey();
 
         // Configuración del panel principal
         setOpaque(false); // Importante para que se vea el fondo redondeado
@@ -39,24 +35,19 @@ public class PaintingCard extends JPanel {
 
         // Obtener la información de la pintura
         paintingId = painting.getInt("id");
-        String filePath = painting.getString("file_path");
-        String painterName = painting.getString("painter_name");
+        String paintingBase64 = painting.getString("painting");
 
         // Obtener la clave AES cifrada y el IV
-        String jsonAesData = SocketHandler.getEncryptedAESKeyAndIV(SocketHandler.authToken, String.valueOf(paintingId));
-        if (jsonAesData == null) {
-            throw new Exception("Error al obtener la clave AES y el IV.");
-        }
+        String encryptedAESKeyBase64 = painting.getString("aesKey");
+        String ivBase64 = painting.getString("iv");
 
-        JSONObject aesData = new JSONObject(jsonAesData);
-        String encryptedAesKeyBase64 = aesData.getString("encrypted_aes_key");
-        String ivBase64 = aesData.getString("iv");
 
         // Descifrar la clave AES
-        String aesKeyBase64 = FunRsa.decryptRsa(encryptedAesKeyBase64, this.privateKey);
+        String aesKeyBase64 = FunRsa.decryptRsa(encryptedAESKeyBase64, this.privateKey);
         System.out.println("AES Key: " + aesKeyBase64);
         // Descifrar la imagen
-        byte[] decryptedImageBytes = decryptImage(filePath, aesKeyBase64, ivBase64);
+        String decryptedString = FunAes.decrypt(aesKeyBase64, paintingBase64, ivBase64);
+        byte[] decryptedImageBytes = Base64.getDecoder().decode(decryptedString);
         ImageIcon imageIcon = new ImageIcon(decryptedImageBytes);
         Image image = imageIcon.getImage();
 
@@ -76,55 +67,13 @@ public class PaintingCard extends JPanel {
         contentPanel.add(imageLabel);
 
         // Etiqueta para el nombre del pintor y estrellas
-        JLabel painterLabel = new JLabel(painterName, SwingConstants.CENTER);
+        JLabel painterLabel = new JLabel(painting.getString("title"), SwingConstants.CENTER);
         painterLabel.setFont(Estilos.DEFAULT_FONT);
         painterLabel.setForeground(Estilos.TEXT_COLOR);
         painterLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentPanel.add(painterLabel);
 
-        if (isEvaluated) {
-            // Mostrar estrellas, comentarios y firma
-            int stars = painting.getInt("stars");
-            String comments = painting.getString("comments");
-            String blindSignature = painting.getString("blind_signature");
 
-            // Puntuación en estrellas
-            JPanel starsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-            starsPanel.setOpaque(false);
-            for (int i = 0; i < 3; i++) {
-                JLabel starLabel = new JLabel("★");
-                starLabel.setFont(new Font(Estilos.DEFAULT_FONT.getName(), Font.PLAIN, 24));
-                // Resaltar las estrellas según la puntuación
-                if(i < stars){
-                    starLabel.setForeground(Color.YELLOW);
-                } else {
-                    starLabel.setForeground(Estilos.ACCENT_COLOR);
-                }
-
-                starsPanel.add(starLabel);
-            }
-            contentPanel.add(starsPanel);
-
-            // Comentarios
-            JTextArea commentsArea = new JTextArea(comments);
-            commentsArea.setEditable(false);
-            commentsArea.setLineWrap(true);
-            commentsArea.setWrapStyleWord(true);
-            commentsArea.setFont(Estilos.DEFAULT_FONT);
-            commentsArea.setForeground(Estilos.TEXT_COLOR);
-            commentsArea.setBackground(Estilos.SECONDARY_COLOR);
-            commentsArea.setBorder(new EmptyBorder(5, 10, 5, 10));
-            contentPanel.add(commentsArea);
-
-            // Aquí deberías verificar la firma con la clave pública del presidente
-            // y mostrar un mensaje de verificación o un sello.
-            // Ejemplo:
-            // boolean isVerified = BlindSignatureClient.verifySignature(evaluation, blindSignature, presidentPublicKey);
-            // JLabel verificationLabel = new JLabel(isVerified ? "Firma Verificada" : "Firma no válida");
-            // contentPanel.add(verificationLabel);
-            // Reemplaza 'evaluation' con la información necesaria para la verificación
-
-        } else {
             // Panel para los botones
             JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 10));
             buttonsPanel.setOpaque(false);
@@ -187,8 +136,11 @@ public class PaintingCard extends JPanel {
                         String comments = commentsArea.getText();
 
                         // Enviar la evaluación al servidor
-                        if (SocketHandler.sendEvaluation(SocketHandler.authToken, paintingId, stars, comments)) {
+                        if (SocketHandler.sendEvaluation(token, paintingId, stars, comments)) {
                             JOptionPane.showMessageDialog(principal.getFrame(), "Evaluación enviada correctamente.");
+                            painting.put("isEvaluated", true);
+                            evaluateButton.setEnabled(false);
+                            evaluateButton.setBackground(Estilos.SECONDARY_COLOR);
                             // Recargar las pinturas no evaluadas
                             // loadPaintings();
 
@@ -199,46 +151,11 @@ public class PaintingCard extends JPanel {
                     }
                 }
             });
-        }
+
 
         add(contentPanel, BorderLayout.CENTER);
 
     }
-
-    private PublicKey getPresidentPublicKey() {
-        String publicKeyBase64 = SocketHandler.getPresidentPublicKey(SocketHandler.authToken);
-        if (publicKeyBase64 != null && !publicKeyBase64.isEmpty()) {
-            try {
-                return FunRsa.getPublicKeyFromBase64(publicKeyBase64);
-            } catch (Exception e) {
-                System.err.println("Error al obtener la clave pública del presidente: " + e.getMessage());
-            }
-        }
-        return null;
-    }
-
-
-
-    private byte[] decryptImage(String filePath, String aesKeyBase64, String ivBase64) {
-        try {
-            // Leer el archivo cifrado
-            File file = new File(filePath);
-            FileInputStream fis = new FileInputStream(file);
-            byte[] encryptedBytes = new byte[(int) file.length()];
-            fis.read(encryptedBytes);
-            fis.close();
-
-            // Descifrar
-            String decryptedStr = FunAes.decrypt(aesKeyBase64, Base64.getEncoder().encodeToString(encryptedBytes), ivBase64);
-            byte[] decryptedBytes = Base64.getDecoder().decode(decryptedStr);
-
-            return decryptedBytes;
-        } catch (Exception e) {
-            System.out.println("Error al descifrar la imagen: " + e);
-            return null;
-        }
-    }
-
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);

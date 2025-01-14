@@ -96,9 +96,9 @@ public class Principal {
             String[] response = SocketHandler.authenticateUser(username, password);
             String token = response[0];
             String userType = response[1];
-            String userId = response[2];
 
-            if (token.isEmpty() || userType.isEmpty() || userId.isEmpty()) {
+
+            if (token.isEmpty() || userType.isEmpty()) {
                 JOptionPane.showMessageDialog(loginPanel, "Error al autenticar", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
@@ -110,7 +110,7 @@ public class Principal {
             } else if ("painter".equals(userType)) {
                 PainterApp painterApp = new PainterApp(this);
                 showPanel(painterApp.painterPanel(token));
-            } else if ("president".equals(userType)) {
+            } else if ("chairman".equals(userType)) {
                 PresidentApp presidentApp = new PresidentApp(this);
                 showPanel(presidentApp.presidentPanel(token));
             } else {
@@ -199,10 +199,6 @@ public class Principal {
             String name = nameField.getText();
             String userType = (String) userTypeComboBox.getSelectedItem();
 
-            // Asignar un token de administrador temporal
-            String adminToken = null; // Usamos "0" como ID temporal para el admin
-            adminToken = generateToken("0", "admin");
-            SocketHandler.authToken = adminToken;
 
             if (username.isEmpty() || password.isEmpty() || name.isEmpty() || userType == null) {
                 JOptionPane.showMessageDialog(crearCuentaPanel, "Por favor, completa todos los campos", "Error", JOptionPane.ERROR_MESSAGE);
@@ -219,7 +215,7 @@ public class Principal {
                 // Registrar presidente
                 PresidentApp presidentApp = new PresidentApp(this);
                 presidentApp.generateAndDownloadKeyPair(username); // Generar y descargar llaves del presidente
-                if (SocketHandler.registerPresident(SocketHandler.authToken, username, name, password, presidentApp.publicKeyBase64_clase)) {
+                if (SocketHandler.registerPresident(username, name, password, presidentApp.publicKeyBase64_clase)) {
                     JOptionPane.showMessageDialog(crearCuentaPanel, "Cuenta de presidente registrada exitosamente", "Éxito", JOptionPane.INFORMATION_MESSAGE);
 
                     showLoginFromAnyPanel();

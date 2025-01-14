@@ -25,7 +25,6 @@ public class JudgePanel extends JPanel {
 
     private Principal principal;
     private String token;
-    private String judgeId;
     private PrivateKey privateKey;
     private JPanel cardsPanel;
     private int currentCardIndex = 0;
@@ -34,10 +33,6 @@ public class JudgePanel extends JPanel {
     public JudgePanel(Principal principal, String token) {
         this.principal = principal;
         this.token = token;
-
-        // Obtener el ID del juez a partir del token
-        String[] tokenParts = token.split("_");
-        this.judgeId = tokenParts[0];
 
         // Solicitar al juez que cargue su clave privada
         this.privateKey = RSAKeyLoader.loadPrivateKey(principal.getFrame());
@@ -108,8 +103,6 @@ public class JudgePanel extends JPanel {
         JButton logOutButton = new JButton("Cerrar Sesión");
         Estilos.styleButton(logOutButton);
 
-        JToggleButton toggleEvaluatedButton = new JToggleButton("Mostrar Evaluadas");
-        bottomPanel.add(toggleEvaluatedButton);
 
 
         bottomPanel.add(logOutButton);
@@ -124,20 +117,6 @@ public class JudgePanel extends JPanel {
 
         add(bottomPanel, BorderLayout.SOUTH);
 
-
-
-        toggleEvaluatedButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (toggleEvaluatedButton.isSelected()) {
-                    toggleEvaluatedButton.setText("Mostrar No Evaluadas");
-                    loadEvaluatedPaintings();
-                } else {
-                    toggleEvaluatedButton.setText("Mostrar Evaluadas");
-                    loadPaintings();
-                }
-            }
-        });
 
         // Acción del botón de cerrar sesión
         logOutButton.addActionListener(e -> {
@@ -164,28 +143,9 @@ public class JudgePanel extends JPanel {
         loadPaintings();
     }
 
-
-    private void loadEvaluatedPaintings() {
-        String evaluatedPaintingsJson = SocketHandler.getEvaluatedPaintingsForJudge(token);
-        if (evaluatedPaintingsJson != null) {
-            try {
-                this.paintingsArray = new JSONArray(evaluatedPaintingsJson);
-                this.currentCardIndex = 0;
-                updateCardsPanel();
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(principal.getFrame(), "Error al cargar la lista de pinturas evaluadas.", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        } else {
-            JOptionPane.showMessageDialog(principal.getFrame(), "No se pudieron obtener las pinturas evaluadas.", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-
-
-
     private void loadPaintings() {
         String paintingsJson = SocketHandler.getPaintingsForJudge(token);
-        if (paintingsJson != null) {
+        if (paintingsJson != "Error") {
             try {
                 this.paintingsArray = new JSONArray(paintingsJson);
                 System.out.println("pinturas: "+paintingsArray);
@@ -202,19 +162,15 @@ public class JudgePanel extends JPanel {
     private void updateCardsPanel() {
         cardsPanel.removeAll();
         if (paintingsArray != null && paintingsArray.length() > 0) {
-            System.out.println("si debo mostrar algo");
             try {
                 JSONObject painting = paintingsArray.getJSONObject(currentCardIndex);
-                boolean isEvaluated = painting.has("stars");
-
-                JPanel cardPanel = new PaintingCard(painting, privateKey, principal, judgeId, isEvaluated);
-                cardsPanel.add(cardPanel);
-
+                if(!painting.has("isEvaluated")) {
+                    JPanel cardPanel = new PaintingCard(token, painting, privateKey, principal);
+                    cardsPanel.add(cardPanel);
+                }
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(principal.getFrame(), "Error al crear la card de la pintura.", "Error", JOptionPane.ERROR_MESSAGE);
             }
-        }else{
-            System.out.println("no debo mostrar nada");
         }
         cardsPanel.revalidate();
         cardsPanel.repaint();

@@ -94,7 +94,8 @@ public class PresidentApp {
             public void actionPerformed(ActionEvent e) {
                 String selectedEvaluation = evaluationsList.getSelectedValue();
                 if (selectedEvaluation != null) {
-                    int evaluationId = Integer.parseInt(selectedEvaluation.split(",")[0].split(": ")[1].trim());
+                    int evaluationId = Integer.parseInt(selectedEvaluation.split(" - ")[0]);
+                    String blindedEvaluation = selectedEvaluation.split(" - ")[1];
 
                     // Verificar que la clave privada ya está cargada
                     if (privateKey == null) {
@@ -104,7 +105,6 @@ public class PresidentApp {
 
                     try {
                         // Obtener la evaluación a firmar a ciegas
-                        String blindedEvaluation = getBlindedEvaluation(evaluationId);
                         String blindSignature = FunBlindSignature.blindSign((RSAPrivateKey) privateKey, blindedEvaluation);
 
                         if(blindSignature != null && !blindSignature.isEmpty()){
@@ -150,9 +150,7 @@ public class PresidentApp {
                 listModel.clear();
                 for (int i = 0; i < evaluationsArray.length(); i++) {
                     JSONObject evaluation = evaluationsArray.getJSONObject(i);
-                    String evaluationInfo = "ID Evaluación: " + evaluation.getInt("evaluation_id") +
-                            ", ID Pintura: " + evaluation.getInt("painting_id") +
-                            ", Juez: " + evaluation.getString("judge_name");
+                    String evaluationInfo = String.format("%d - %s", evaluation.getInt("id"), evaluation.get("blind_message"));
                     listModel.addElement(evaluationInfo);
                 }
             } catch (Exception e) {

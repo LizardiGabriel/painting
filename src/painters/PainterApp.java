@@ -117,8 +117,8 @@ public class PainterApp {
             // descargarle al usuario la llave privada
             JOptionPane.showMessageDialog(principal.getFrame(), "Para continuar se te descargaran tus llaves privadas");
 
-            String userHome = System.getProperty("user.home");
-            String downloadsFolder = Paths.get(userHome, "Downloads/pintor").toString();
+            String userHome = System.getProperty("user.dir");
+            String downloadsFolder = Paths.get(userHome, "keys/pintor").toString();
             Path path = Paths.get(downloadsFolder);
             if (!Files.exists(path)) {
                 try {
@@ -149,7 +149,7 @@ public class PainterApp {
             }
 
             // usar el token de administrador temporal
-            if (SocketHandler.registerPainter(SocketHandler.authToken, username, firma, pub, nombre, password)) {
+            if (SocketHandler.registerPainter(username, firma, pub, nombre, password)) {
                 JOptionPane.showMessageDialog(principal.getFrame(), "Registro exitoso", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                 principal.showLoginFromAnyPanel();
             } else {
@@ -161,8 +161,8 @@ public class PainterApp {
 
         downloadTyCButton.addActionListener(e -> {
             try {
-                String userHome = System.getProperty("user.home");
-                String downloadsFolder = Paths.get(userHome, "Downloads").toString();
+                String userHome = System.getProperty("user.dir");
+                String downloadsFolder = Paths.get(userHome, "txt/terms").toString();
                 Path path = Paths.get(downloadsFolder);
                 if (!Files.exists(path)) {
                     Files.createDirectories(path);

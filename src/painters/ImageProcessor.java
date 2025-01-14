@@ -11,6 +11,7 @@ import java.util.List;
 import general.FunAes;
 import general.FunRsa;
 import general.SocketHandler;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class ImageProcessor {
@@ -37,16 +38,15 @@ public class ImageProcessor {
             //System.out.println("Mensaje descifrado: " + descifrado);
 
             // pedir al socket las llaves RSA OAEP publicas de todos los jueces
-            String jsonJuezClave = SocketHandler.getRsaJuecesLlaves();
-            JSONObject jsonObject = new JSONObject(jsonJuezClave);
-            List<String> juezes = new ArrayList<>();
+            String jsonJuezClave = SocketHandler.getRsaJuecesLlaves(token);
+            JSONArray jsonArray = new JSONArray(jsonJuezClave);
+            System.out.println("Judges public keys: " + jsonArray.toString());
+            List<Integer> juezes = new ArrayList<>();
             List<String> claves = new ArrayList<>();
-            for (String juez : jsonObject.keySet()) {
-                System.out.println("nombre del juez: " + juez);
-                System.out.println("clave publica del juez: " + jsonObject.getString(juez));
-
-                juezes.add(juez);
-                claves.add(jsonObject.getString(juez));
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject judgeKey = jsonArray.getJSONObject(i);
+                juezes.add(judgeKey.getInt("id"));
+                claves.add(judgeKey.getString("publicKey"));
             }
 
             // cifrar la llave AES con las llaves RSA OAEP de los jueces
@@ -57,12 +57,16 @@ public class ImageProcessor {
             }
 
             // hacer un json con juez: llave cifrada
-            JSONObject jsonAesKeys = new JSONObject();
+            JSONArray jsonAesKeys = new JSONArray();
             for (int i = 0; i < juezes.size(); i++) {
-                jsonAesKeys.put(juezes.get(i), encryptedAesKeys.get(i));
+                JSONObject jsonAesKey = new JSONObject();
+                jsonAesKey.put("id", juezes.get(i));
+                jsonAesKey.put("aesKey", encryptedAesKeys.get(i));
+                jsonAesKeys.put(jsonAesKey);
             }
 
             System.out.println("jsonAesKeys: " + jsonAesKeys.toString());
+
 
             // enviar el json
             if (SocketHandler.sendPainting(token, encryptedImage, iv, jsonAesKeys.toString())){

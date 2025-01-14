@@ -1,22 +1,29 @@
 package general;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.URI;
 import java.net.UnknownHostException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 public class SocketHandler {
 
-    private static final String SERVER_HOST = "localhost";
-    private static final int SERVER_PORT = 12345;
+    private static final String SERVER_HOST = "http://localhost:8000";
+    private static final HttpClient client = HttpClient.newBuilder()
+            .version(HttpClient.Version.HTTP_1_1)
+            .build();
+    private static final int SERVER_PORT = 8000;
 
     // Variables para almacenar la información del usuario autenticado
     public static String authToken = "";
-    public static String authUserType = "";
-    public static String authUserId = "";
 
     public  static String manejoSocket(String jsonDatos) {
         String respuesta = "";
@@ -44,32 +51,33 @@ public class SocketHandler {
 
 
     public static String[] authenticateUser(String username, String password) {
-        String[] result = new String[3];
+        String[] result = new String[2];
         Arrays.fill(result, "");
 
+        String url = SERVER_HOST + "/auth";
         try {
-            JSONObject request = new JSONObject();
-            request.put("comando", "AUTENTICAR");
-            request.put("user", username);
-            request.put("password", password);
+            JSONObject requestJSON = new JSONObject();
+            requestJSON.put("email", username);
+            requestJSON.put("password", password);
 
-            String respuesta = manejoSocket(request.toString());
+            HttpRequest request = HttpRequest.newBuilder()
+                    .POST(HttpRequest.BodyPublishers.ofByteArray(requestJSON.toString().getBytes(StandardCharsets.UTF_8)))
+                    .uri(URI.create(url))
+                    .build();
 
-            if (respuesta != null && !respuesta.isEmpty()) {
-                JSONObject response = new JSONObject(respuesta);
-                if (response.getString("response").equals("200")) {
-                    // Guardar el token, userType y userId
-                    authToken = response.getString("token");
-                    // retornamos
-                    result[0] = authToken;
-                    result[1] = response.getString("userType");
-                    result[2] = response.getString("userId");
-                }
-            } else {
-                System.err.println("Respuesta del servidor vacía o nula.");
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            JSONObject responseJSON;
+            if(response.statusCode() != 200) {
+                responseJSON = new JSONObject(response.body());
+                System.out.println(responseJSON.get("error"));
             }
 
-        } catch (JSONException e) {
+            responseJSON = new JSONObject(response.body());
+            result[0] = responseJSON.getString("token");
+            result[1] = responseJSON.getString("type");
+
+            return result;
+        } catch (JSONException | IOException | InterruptedException e) {
             e.printStackTrace();
         }
         return result;
@@ -101,143 +109,215 @@ public class SocketHandler {
         return false;
     }
 
-    public static boolean registerPainter(String token, String username, String firma, String pub, String nombre, String password) {
+    public static boolean registerPainter(String username, String firma, String pub, String nombre, String password) {
+        String url = SERVER_HOST + "/key";
         JSONObject json = new JSONObject();
-        json.put("comando", "REGISTRAR_PINTOR");
-        json.put("token", token);
-        json.put("user", username);
-        json.put("firma", firma);
-        json.put("pub", pub);
-        json.put("nombre", nombre);
-        json.put("password", password);
-        String jsonDatos = json.toString();
+        json.put("email", username);
+        json.put("publicKey", pub);
 
-        String respuesta = manejoSocket(jsonDatos);
+        HttpRequest request = HttpRequest.newBuilder()
+                .POST(HttpRequest.BodyPublishers.ofByteArray(json.toString().getBytes(StandardCharsets.UTF_8)))
+                .uri(URI.create(url))
+                .build();
 
-        JSONObject response = new JSONObject(respuesta);
-        if (response.getString("response").equals("200")) {
+        try {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            JSONObject responseJson;
+            if(response.statusCode() != 200) {
+                responseJson = new JSONObject(response.body());
+                System.out.println(responseJson.get("error"));
+                return false;
+            }
+
+            json.clear();
+            json.put("email", username);
+            json.put("password", password);
+            json.put("name", nombre);
+            json.put("signature", firma);
+
+            url = SERVER_HOST + "/user";
+            request = HttpRequest.newBuilder()
+                    .POST(HttpRequest.BodyPublishers.ofByteArray(json.toString().getBytes(StandardCharsets.UTF_8)))
+                    .uri(URI.create(url))
+                    .build();
+
+            response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if(response.statusCode() != 200) {
+                responseJson = new JSONObject(response.body());
+                System.out.println(responseJson.get("error"));
+                return false;
+            }
+
             return true;
+        }catch (IOException | InterruptedException e) {
+            System.out.println("No se pudo conectar al server");
+            return false;
         }
-
-        System.out.println(response.getString("info"));
-        return false;
     }
 
-    public static boolean registrarJuez(String token, String username, String nombre, String pubKeyRsaOaep, String password) {
-        JSONObject json = new JSONObject();
-        json.put("comando", "REGISTRAR_JUEZ");
-        json.put("token", token);
-        json.put("user", username);
-        json.put("nombre", nombre);
-        json.put("clave_publica_rsaOAP", pubKeyRsaOaep);
-        json.put("password", password);
-        String jsonDatos = json.toString();
+    public static boolean registrarJuez(String username, String nombre, String pubKeyRsaOaep, String password) {
+        String url = SERVER_HOST + "/key";
 
-        String respuesta = manejoSocket(jsonDatos);
+        JSONObject req = new JSONObject();
 
-        JSONObject response = new JSONObject(respuesta);
-        if (response.getString("response").equals("200")) {
+        req.put("email", username);
+        req.put("publicKey", pubKeyRsaOaep);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .POST(HttpRequest.BodyPublishers.ofByteArray(req.toString().getBytes(StandardCharsets.UTF_8)))
+                .uri(URI.create(url))
+                .build();
+
+        try {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            JSONObject res;
+            if(response.statusCode() != 200) {
+                res = new JSONObject(response.body());
+                System.out.println(res.get("error"));
+                return false;
+            }
+
+            req.clear();
+            req.put("email", username);
+            req.put("password", password);
+            req.put("name", nombre);
+            req.put("type", "judge");
+
+            url = SERVER_HOST + "/admin";
+
+            request = HttpRequest.newBuilder()
+                    .POST(HttpRequest.BodyPublishers.ofByteArray(req.toString().getBytes(StandardCharsets.UTF_8)))
+                    .uri(URI.create(url))
+                    .build();
+
+            response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if(response.statusCode() != 200) {
+                res = new JSONObject(response.body());
+                System.out.println(res.get("error"));
+                return false;
+            }
+
             return true;
+        }catch (IOException | InterruptedException e) {
+            return false;
         }
-
-        System.out.println(response.getString("info"));
-        return false;
     }
 
     public static String getTYC() {
-        JSONObject json = new JSONObject();
-        json.put("comando", "OBTENER_TYC");
-        String jsonDatos = json.toString();
+        try{
+            String url = SERVER_HOST + "/consent";
+            HttpRequest request = HttpRequest.newBuilder()
+                    .GET()
+                    .uri(URI.create(url))
+                    .build();
 
-        String respuesta = manejoSocket(jsonDatos);
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-        JSONObject response = new JSONObject(respuesta);
-        if (response.getString("response").equals("200")) {
-            return response.getString("tyc");
+            if(response.statusCode() != 200) {
+                return "Error recuperando los terminos y condiciones";
+            }
+
+            JSONObject responseJSON = new JSONObject(response.body());
+            return responseJSON.getString("consent");
+        }catch (IOException | InterruptedException e) {
+            return "Error recuperando los terminos y condiciones";
         }
-
-        System.out.println(response.getString("info"));
-        return "";
     }
 
-    public static String getRsaJuecesLlaves() {
-        JSONObject json = new JSONObject();
-        json.put("comando", "GET_JUECES_RSA_PUBLIC_KEYS");
-        String jsonDatos = json.toString();
+    public static String getRsaJuecesLlaves(String token) {
+        String url = SERVER_HOST + "/judge";
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create(url))
+                .header("Authorization", String.format("Bearer %s", token))
+                .build();
 
-        String respuesta = manejoSocket(jsonDatos);
+        try {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        JSONObject response = new JSONObject(respuesta);
-        if (response.getString("response").equals("200")) {
-            return response.getString("llaves_publicas");
+            JSONObject res;
+            if(response.statusCode() != 200) {
+                res = new JSONObject(response.body());
+                System.out.println(res.getString("error"));
+                return "error";
+            }
+
+            res = new JSONObject(response.body());
+            System.out.println("Se recibio: " + res.toString());
+
+            return  res.get("keys").toString();
+
+        }catch (IOException | InterruptedException e) {
+            System.out.println("Error al conectarse al server");
+            return "error";
         }
-
-        System.out.println(response.getString("info"));
-        return "";
     }
 
     public static boolean sendPainting(String token, String imagen, String iv, String aesKeys) {
-        JSONObject json = new JSONObject();
-        json.put("comando", "SEND_PAINTING");
-        json.put("token", token);
-        json.put("imagen", imagen);
-        json.put("iv", iv);
-        json.put("aesKeys", aesKeys);
-        String jsonDatos = json.toString();
+        String url = SERVER_HOST + "/painting";
+        JSONObject req = new JSONObject();
+        req.put("painting", imagen);
+        req.put("iv", iv);
+        req.put("encrypted_keys", new JSONArray(aesKeys));
+        req.put("title", "in progress");
+        req.put("description", "in progress");
 
-        String respuesta = manejoSocket(jsonDatos);
+        System.out.println("Subiendo imagen: " + req.toString());
 
-        JSONObject response = new JSONObject(respuesta);
-        if (response.getString("response").equals("200")) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .POST(HttpRequest.BodyPublishers.ofByteArray(req.toString().getBytes(StandardCharsets.UTF_8)))
+                .uri(URI.create(url))
+                .header("Authorization", String.format("Bearer %s", token))
+                .build();
+
+        try {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            JSONObject res;
+            if(response.statusCode() != 200) {
+                res = new JSONObject(response.body());
+                System.out.println(res.getString("error"));
+                return false;
+            }
+
             return true;
+        }catch (IOException | InterruptedException e) {
+            System.out.println("No se pudo conectar al server");
+            System.out.println(e.getMessage());
+            return false;
         }
-
-        System.out.println(response.getString("info"));
-        return false;
     }
 
 
     public static String getPaintingsForJudge(String token) {
-        JSONObject json = new JSONObject();
-        json.put("comando", "GET_PAINTINGS_FOR_JUDGE");
-        json.put("token", token);
-        String jsonDatos = json.toString();
+        String url = SERVER_HOST + "/painting";
 
-        String respuesta = manejoSocket(jsonDatos);
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create(url))
+                .header("Authorization", String.format("Bearer %s", token))
+                .build();
 
-        // Manejar la respuesta
-        JSONObject response = new JSONObject(respuesta);
-        if (response.getString("response").equals("200")) {
-            return response.getJSONArray("paintings").toString(); // Devuelve el array de pinturas en formato JSON
-        } else {
-            System.out.println("Error al obtener la lista de pinturas: " + response.getString("info"));
-            return null;
+        try {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            JSONObject res = new JSONObject(response.body());
+            if(response.statusCode() != 200) {
+                System.out.println(res.getString("error"));
+                return "Error";
+            }
+
+            return res.getJSONArray("paintings").toString();
+        }catch (IOException | InterruptedException e) {
+            System.out.println("No se pudo conectar al server");
+            System.out.println(e.getMessage());
+            return "Error";
         }
     }
-
-
-    public static String getEvaluatedPaintingsForJudge(String token) {
-        JSONObject json = new JSONObject();
-        json.put("comando", "getEvaluatedPaintingsForJudge");
-        json.put("token", token);
-        String jsonDatos = json.toString();
-
-        String respuesta = manejoSocket(jsonDatos);
-
-        // Manejar la respuesta
-        JSONObject response = new JSONObject(respuesta);
-        if (response.getString("response").equals("200")) {
-            return response.getJSONArray("paintings").toString(); // Devuelve el array de pinturas en formato JSON
-        } else {
-            System.out.println("Error al obtener la lista de pinturas: " + response.getString("info"));
-            return null;
-        }
-    }
-
-
-
-
-
 
     public static String getEncryptedAESKeyAndIV(String token, String painting_id) {
         JSONObject json = new JSONObject();
@@ -259,83 +339,116 @@ public class SocketHandler {
 
 
     public static boolean sendEvaluation(String token, int paintingId, int stars, String comments) {
-        JSONObject json = new JSONObject();
-        json.put("comando", "EVALUATE_PAINTING");
-        json.put("token", token);
-        json.put("paintingId", paintingId);
-        json.put("stars", stars);
-        json.put("comments", comments);
-        String jsonDatos = json.toString();
+        String url = SERVER_HOST + "/evaluation";
+        JSONObject req = new JSONObject();
 
-        String respuesta = manejoSocket(jsonDatos);
+        req.put("id", paintingId);
+        req.put("stars", stars);
+        req.put("comments", comments);
 
-        JSONObject response = new JSONObject(respuesta);
-        return response.getString("response").equals("200");
+        HttpRequest request = HttpRequest.newBuilder()
+                .POST(HttpRequest.BodyPublishers.ofByteArray(req.toString().getBytes(StandardCharsets.UTF_8)))
+                .uri(URI.create(url))
+                .header("Authorization", String.format("Bearer %s", token))
+                .build();
+
+        try {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            JSONObject res;
+            if(response.statusCode() != 200) {
+                res = new JSONObject(response.body());
+                System.out.println(res.getString("error"));
+                return false;
+            }
+
+            return true;
+        }catch (IOException | InterruptedException e) {
+            System.out.println("No se pudo conectar al server");
+            System.out.println(e.getMessage());
+            return false;
+        }
     }
 
 
 
 
-    public static boolean registerPresident(String token, String username, String name, String password, String publicKey) {
-        JSONObject json = new JSONObject();
-        json.put("comando", "REGISTRAR_PRESIDENTE");
-        json.put("token", token);
-        json.put("user", username);
-        json.put("nombre", name);
-        json.put("password", password);
-        json.put("publicKey", publicKey);
+    public static boolean registerPresident( String username, String name, String password, String publicKey) {
+        String url = SERVER_HOST + "/key";
 
-        String jsonDatos = json.toString();
+        JSONObject req = new JSONObject();
 
-        String respuesta = manejoSocket(jsonDatos);
+        req.put("email", username);
+        req.put("publicKey", publicKey);
 
-        JSONObject response = new JSONObject(respuesta);
-        if (response.getString("response").equals("200")) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .POST(HttpRequest.BodyPublishers.ofByteArray(req.toString().getBytes(StandardCharsets.UTF_8)))
+                .uri(URI.create(url))
+                .build();
+
+        try {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            JSONObject res;
+            if(response.statusCode() != 200) {
+                res = new JSONObject(response.body());
+                System.out.println(res.get("error"));
+                return false;
+            }
+
+            req.clear();
+            req.put("email", username);
+            req.put("password", password);
+            req.put("name", name);
+            req.put("type", "chairman");
+
+            url = SERVER_HOST + "/admin";
+
+            request = HttpRequest.newBuilder()
+                    .POST(HttpRequest.BodyPublishers.ofString(req.toString()))
+                    .uri(URI.create(url))
+                    .build();
+
+            response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if(response.statusCode() != 200) {
+                res = new JSONObject(response.body());
+                System.out.println(res.get("error"));
+                return false;
+            }
+
             return true;
+        }catch (IOException | InterruptedException e) {
+            return false;
         }
-
-        System.out.println(response.getString("info"));
-        return false;
     }
 
 
 
     public static String getEvaluationsForPresident(String token) {
-        JSONObject json = new JSONObject();
-        json.put("comando", "GET_EVALUATIONS_FOR_PRESIDENT");
-        json.put("token", token);
-        String jsonDatos = json.toString();
+        String url = SERVER_HOST + "/evaluation";
 
-        String respuesta = manejoSocket(jsonDatos);
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create(url))
+                .header("Authorization", String.format("Bearer %s", token))
+                .build();
 
-        JSONObject response = new JSONObject(respuesta);
-        if (response.getString("response").equals("200")) {
-            return response.getJSONArray("evaluations").toString();
-        } else {
-            System.out.println("Error al obtener la lista de evaluaciones: " + response.getString("info"));
+        try {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            JSONObject res = new JSONObject(response.body());
+            if(response.statusCode() != 200) {
+                System.out.println(res.getString("error"));
+                return null;
+            }
+
+            return res.getJSONArray("evaluations").toString();
+        }catch (IOException | InterruptedException e) {
+            System.out.println("No se pudo conectar al server");
+            System.out.println(e.getMessage());
             return null;
         }
     }
-
-
-    public static String getPresidentPublicKey(String token) {
-        JSONObject json = new JSONObject();
-        json.put("comando", "GET_PRESIDENT_PUBLIC_KEY");
-        json.put("token", token);
-        String jsonDatos = json.toString();
-
-        String respuesta = manejoSocket(jsonDatos);
-
-        JSONObject response = new JSONObject(respuesta);
-        if (response.getString("response").equals("200")) {
-            return response.getString("publicKey");
-        } else {
-            System.out.println("Error al obtener la clave pública del presidente: " + response.getString("info"));
-            return null;
-        }
-    }
-
-
     public static String sendBlindedEvaluation(String token, int paintingId, String blindedEvaluation) {
         JSONObject json = new JSONObject();
         json.put("comando", "BLIND_SIGN_EVALUATION");
@@ -359,6 +472,8 @@ public class SocketHandler {
 
 
     public static String getBlindedEvaluationFromDB(String token, int evaluationId) {
+
+
         JSONObject json = new JSONObject();
         json.put("comando", "GET_BLINDED_EVALUATION");
         json.put("token", token);
@@ -382,18 +497,31 @@ public class SocketHandler {
 
 
     public static boolean sendBlindedSignature(String token, int evaluationId, String blindSignature) {
-        JSONObject json = new JSONObject();
-        json.put("comando", "SAVE_BLIND_SIGNATURE");
-        json.put("token", token);
-        json.put("evaluationId", evaluationId);
-        json.put("blindSignature", blindSignature);
+        String url = SERVER_HOST + "/evaluation";
 
-        String jsonDatos = json.toString();
+        JSONObject req = new JSONObject();
+        req.put("blindedSignature", blindSignature);
+        req.put("id", evaluationId);
 
-        String respuesta = manejoSocket(jsonDatos);
+        HttpRequest request = HttpRequest.newBuilder()
+                .PUT(HttpRequest.BodyPublishers.ofByteArray(req.toString().getBytes(StandardCharsets.UTF_8)))
+                .uri(URI.create(url))
+                .header("Authorization", String.format("Bearer %s", token))
+                .build();
 
-        JSONObject response = new JSONObject(respuesta);
-        return response.getString("response").equals("200");
+        try {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            JSONObject res;
+            if(response.statusCode() != 200) {
+                res = new JSONObject(response.body());
+                System.out.println(res.getString("error"));
+                return false;
+            }
+
+            return true;
+        }catch (IOException | InterruptedException e) {
+            return false;
+        }
     }
 
 
